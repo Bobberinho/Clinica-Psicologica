@@ -1,5 +1,5 @@
 <script setup>
-import { login } from './requests.js'
+import { fetch_path } from './requests.js'
 import router from './router/index.js'
 
 let username = ""
@@ -7,7 +7,7 @@ let password = ""
 
 function login_form(event) {
     event.preventDefault()
-    login(username, password)
+    fetch_path(`/users/${username}`)
     router.push(`/user/${username}`)
 }
 </script>
