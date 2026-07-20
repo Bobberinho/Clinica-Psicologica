@@ -7,7 +7,7 @@ let password = ""
 
 function login_form(event) {
     event.preventDefault()
-    fetch_path(`/users/${username}`)
+    fetch_path(`/user/${username}`)
     router.push(`/user/${username}`)
 }
 </script>

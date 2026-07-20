@@ -1,13 +1,20 @@
 <script setup>
-import Login from './Login.vue'
+
 </script>
 
 <template>
 	<header>
 		<h1>PsicOk <span>clinica psicologica e psichiatrica</span></h1>
 	</header>
+	<nav>
+		<a>Statistiche</a>
+		<a>Ricerca</a>
+		<a>Profilo</a>
+	</nav>
 	<main>
-		<Login></Login>
+		<section style="grid-column: 2;">
+			<RouterView></RouterView>
+		</section>
 	</main>
 </template>
 
@@ -18,6 +25,11 @@ import Login from './Login.vue'
 }
 body {
 	background-color: whitesmoke;
+}
+main {
+	display: grid;
+	grid-template-rows: 1fr;
+	grid-template-columns: 1fr 2fr 1fr;
 }
 header {
 	padding: 2rem;
@@ -34,12 +46,28 @@ header span {
 	color: darkgray;
 	font-size: 2rem;
 }
+nav {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	background-color: limegreen;
+}
+nav a {
+	padding: 1rem;
+	font-size: 1.2rem;
+	cursor: pointer;
+}
+nav a:hover {
+	background-color: rgba(0,0,0,0.1);
+}
 
 form {
 	padding: 1rem;
 	display: flex;
 	flex-direction: column;
-	gap: 0.5rem
+	gap: 0.5rem;
+	margin-top: 2rem;
+	margin-bottom: 2rem;
 }
 .form-title {
 	font-size: 1.6rem;
