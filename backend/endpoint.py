@@ -1,9 +1,15 @@
-from fastapi import FastAPI, HTTPException
+from datetime import datetime, timedelta, timezone
+
+from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer
+import jwt
+from pydantic import BaseModel
 from tokens import generate_token
 import sqlite3
 
 app = FastAPI()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 # Enable CORS
 origins = [
@@ -21,6 +27,70 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+class User(BaseModel):
+    email: str | None = None
+    full_name: str | None = None
+    disabled: bool | None = None
+
+
+class UserInDB(User):
+    hashed_password: str
+
+def check_pwd(email: str, password: str):
+    conn = connect_to_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM SPECIALISTI WHERE Email = ? AND Password = ?", (email,password))
+    user = dict(cursor.fetchone())
+    conn.close()
+    return user
+
+def check_email(email: str):
+    conn = connect_to_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM SPECIALISTI WHERE Email = ?", (email,))
+    user = dict(cursor.fetchone())
+    conn.close()
+    return user
+
+def authenticate_token(token:str):
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("email")
+        if email is None:
+            raise credentials_exception
+    except jwt.InvalidTokenError:
+        raise credentials_exception
+    
+    user = check_email(email=email)
+    if user is None:
+        raise credentials_exception
+    print(f"{user['Nome']} {user['Cognome']} {user['Email']}")
+    return user
+
+SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+def create_access_token(data: dict, expires_delta: timedelta | None = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+        to_encode.update({"expire": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+
+
+
+
+# ENDPOINTS
+
 def connect_to_db():
     conn = sqlite3.connect('database.db')
     # This allows us to access columns by name (like row['email']) instead of index (row[2])
@@ -28,24 +98,26 @@ def connect_to_db():
     return conn
 
 
-@app.get("/utente")
-def get_user(email:str, password:str):
-    print("GET_USER")
-    conn = connect_to_db()
-    cursor = conn.cursor()
+@app.post("/login")
+async def login(email:str, password:str):
+    print("LOGIN")
+    user = check_pwd(email, password)
     
-    cursor.execute("SELECT * FROM SPECIALISTI WHERE Email = ? AND Password = ?", (email,password))
-    row = cursor.fetchone()
-    conn.close()
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    # access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(data={"email": user["Email"]}, expires_delta=None)
     
-    if row is None:
-        raise HTTPException(status_code=404, detail="Wrong email or password")
-    
-    return generate_token()
+    return { "token": access_token, "type": "bearer" }
 
 @app.get("/paziente/{id}")
-def get_patient(id: int):
+def get_patient(id: int, token: str | None = Header(default=None)):
     print("GET_PATIENT")
+    authenticate_token(token)
     conn = connect_to_db()
     cursor = conn.cursor()
     
@@ -63,8 +135,9 @@ def get_patient(id: int):
 
 
 @app.get("/pazienti")
-def get_patient():
+def get_patient(token: str | None = Header(default=None)):
     print("GET_PATIENTS")
+    authenticate_token(token)
     conn = connect_to_db()
     cursor = conn.cursor()
     

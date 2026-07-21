@@ -1,5 +1,5 @@
 <script setup>
-import { api_get, hash } from './util.js'
+import { api_login, hash } from './util.js'
 import router from './router/index.js'
 
 let email = ""
@@ -7,11 +7,8 @@ let password = ""
 
 async function login_form(event) {
     event.preventDefault()
-    const params = new URLSearchParams()
-    params.append("email", email)
-    params.append("password", await hash(password))
-    api_get(`/utente`, params)
-    router.push(`/cerca`) // TODO
+    api_login(email, password)
+    //router.push(`/cerca`) // TODO
 }
 </script>
 
