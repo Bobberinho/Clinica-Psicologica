@@ -20,7 +20,7 @@ def connect_to_db():
     return conn
 
 # 2. Define your endpoint
-@app.get("/users/{username}")
+@app.get("/user/{username}")
 def get_user(username: str):
     print("called")
     conn = connect_to_db()
