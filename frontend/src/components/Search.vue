@@ -31,19 +31,22 @@ function toggle_case_sensitive() {
 </form>
 
 <section class="list">
-    <div class="list-item" v-for="patient in patients_filtered">
+    <a :href="'/patient/' + patient.CF" class="list-item" v-for="patient in patients_filtered">
         <div class="list-item-title">{{ patient.Nome }} {{ patient.Cognome }}</div>
         <div class="list-item-subtitle">{{ patient.CF }}</div>
         <div class="list-item-info-wseparator">
             <span>{{ patient.Data_Nascita }}</span>
             <span>{{ patient.Indirizzo }}</span>
         </div>
+    </a>
+    <div v-if="patients_filtered.length == 0">
+        Nessun paziente trovato.
     </div>
 </section>
 
 </template>
 
-<style>
+<style scoped>
 form {
     display: flex;
     flex-direction: row;
@@ -83,6 +86,8 @@ form input[type="text"] {
     flex-direction: column;
 }
 .list-item {
+    color: black;
+    text-decoration: none;
     padding: .8rem;
     border: 2px solid darkgreen;
     border-radius: .5rem;
