@@ -11,9 +11,9 @@
 		<a>Ricerca</a>
 		<a>Profilo</a>
 	</nav>
-	<main>
-		<section style="grid-column: 2;">
-			<RouterView></RouterView>
+	<main style="height: 100%;">
+		<section style="grid-column: 2; height: 100%;">
+			<Suspense><RouterView></RouterView></Suspense>
 		</section>
 	</main>
 </template>
@@ -23,8 +23,12 @@
 	box-sizing: border-box;
 	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
+#app {
+	height: 100%;
+}
 body {
 	background-color: whitesmoke;
+	margin: 0;
 }
 main {
 	display: grid;

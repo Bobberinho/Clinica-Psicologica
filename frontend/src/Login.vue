@@ -1,5 +1,5 @@
 <script setup>
-import { fetch_path } from './requests.js'
+import { fetch_path } from './util.js'
 import router from './router/index.js'
 
 let username = ""

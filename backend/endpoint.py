@@ -5,10 +5,17 @@ import sqlite3
 app = FastAPI()
 
 # Enable CORS
+origins = [
+    "http://localhost:5173",
+    "http://localhost",
+    "http://localhost:8080",
+    "http://127.0.0.1:8000"
+]
+
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173"], # Default Vite/Vue dev port
-    allow_credentials=True,
+    CORSMiddleware, 
+    allow_origins=["*"], # Default Vite/Vue dev port
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -20,21 +27,42 @@ def connect_to_db():
     return conn
 
 # 2. Define your endpoint
-@app.get("/user/{username}")
-def get_user(username: str):
-    print("called")
+@app.get("/patient/{id}")
+def get_patient(id: int):
+    print("GET_PATIENT")
     conn = connect_to_db()
     cursor = conn.cursor()
     
     # Use a parameterized query (?) to prevent SQL injection
-    cursor.execute("SELECT id, username, email FROM users WHERE username = ?", (username,))
+    cursor.execute("SELECT * FROM PAZIENTI WHERE ID = ?", (id,))
     row = cursor.fetchone()
     conn.close()
     
     if row is None:
-        raise HTTPException(status_code=404, detail="User not found xx")
+        raise HTTPException(status_code=404, detail="Not found!")
         
     # Convert the SQLite row object into a standard Python dictionary to send as JSON
+    print(dict(row))
     return dict(row)
+
+
+@app.get("/patients")
+def get_patient():
+    print("GET_PATIENTS")
+    conn = connect_to_db()
+    cursor = conn.cursor()
+    
+    # Use a parameterized query (?) to prevent SQL injection
+    cursor.execute("SELECT * FROM PAZIENTI")
+    rows = cursor.fetchall()
+    conn.close()
+    
+    if rows is None:
+        raise HTTPException(status_code=404, detail="Not found!")
+        
+    # Convert the SQLite row object into a standard Python dictionary to send as JSON
+    ret = [dict(row) for row in rows]
+    print(ret)
+    return ret
 
 # uvicorn endpoint:app --reload
