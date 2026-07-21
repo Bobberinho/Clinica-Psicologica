@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from tokens import generate_token
 import sqlite3
 
 app = FastAPI()
@@ -39,9 +40,8 @@ def get_user(email:str, password:str):
     
     if row is None:
         raise HTTPException(status_code=404, detail="Wrong email or password")
-        
-    print(dict(row))
-    return dict(row)
+    
+    return generate_token()
 
 @app.get("/paziente/{id}")
 def get_patient(id: int):
