@@ -26,8 +26,24 @@ def connect_to_db():
     conn.row_factory = sqlite3.Row
     return conn
 
-# 2. Define your endpoint
-@app.get("/patient/{id}")
+
+@app.get("/utente")
+def get_user(email:str, password:str):
+    print("GET_USER")
+    conn = connect_to_db()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT * FROM SPECIALISTI WHERE Email = ? AND Password = ?", (email,password))
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row is None:
+        raise HTTPException(status_code=404, detail="Wrong email or password")
+        
+    print(dict(row))
+    return dict(row)
+
+@app.get("/paziente/{id}")
 def get_patient(id: int):
     print("GET_PATIENT")
     conn = connect_to_db()
@@ -46,7 +62,7 @@ def get_patient(id: int):
     return dict(row)
 
 
-@app.get("/patients")
+@app.get("/pazienti")
 def get_patient():
     print("GET_PATIENTS")
     conn = connect_to_db()
