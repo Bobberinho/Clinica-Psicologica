@@ -1,5 +1,5 @@
 import sqlite3
-conn = sqlite3.connect('./database.db')  # crea il database se per qualsiasi caso non esistesse già
+conn = sqlite3.connect('database.db')  # crea il database se per qualsiasi caso non esistesse già
 cursor = conn.cursor()
 #cursor.execute("DROP TABLE PAZIENTI")
 cursor.execute("CREATE TABLE PAZIENTI (ID INT PRIMARY KEY, NOME VARCHAR(255) NOT NULL, COGNOME VARCHAR(255) NOT NULL, RESIDENZA VARCHAR(255) NOT NULL, CODICE_FISCALE VARCHAR(16) NOT NULL, DATA_NASCITA TEXT NOT NULL)")

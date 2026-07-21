@@ -1,23 +1,40 @@
 <script setup>
-import { ref } from 'vue'
+import { fetch_path, sort } from '@/util'
+import { onMounted, ref } from 'vue'
 
 let case_sensitive = false
 let search_text = ""
-const patients = [
-    { Nome: "Sara", Cognome: "Cappelli", CF: "CPPSRA05T62C573F", Data_Nascita: "22/12/2005", Indirizzo: "Via Redichiaro 2020, Cesena (FC)" },
-    { Nome: "Diego", Cognome: "Bernabini", CF: "BRNDGI05S10H294J", Data_Nascita: "10/11/2005", Indirizzo: "Piazza Cavalcaconte 1, Sant'Agata Feltria (RN)" }
-]
-const patients_filtered = ref([])
+const patients = sort(await fetch_path("/patients"), "COGNOME")
+// const patients = [
+//     { Nome: "Diego", Cognome: "Bernabini", CF: "BRNDGI05S10H294J", Data_Nascita: "10/11/2005", Indirizzo: "Piazza Cavalcaconte 1, Sant'Agata Feltria (RN)" }
+//     { Nome: "Sara", Cognome: "Cappelli", CF: "CPPSRA05T62C573F", Data_Nascita: "22/12/2005", Indirizzo: "Via Redichiaro 2020, Cesena (FC)" },
+// ]
+const patients_filtered = ref(patients.filter((p) => true))
+const count = ref(patients.length)
 
 function search(event) {
     event.preventDefault()
     let flag = case_sensitive ? "" : "i"
     let re = new RegExp(search_text, flag)
-    patients_filtered.value = patients.filter((p) => p.Nome.match(re) || p.Cognome.match(re) || p.CF.match(re))
+    patients_filtered.value = patients.filter((p) => p["NOME"].match(re) || p["COGNOME"].match(re) || p["CODICE_FISCALE"].match(re))
+    count.value = patients_filtered.value.length
 }
 function toggle_case_sensitive() {
     case_sensitive = !case_sensitive
     document.getElementById("case-sensitive-btn").classList.toggle('active')
+}
+onMounted(() => {
+    resize_fills()
+})
+window.addEventListener("resize", resize_fills)
+function resize_fills() {
+    console.log("resized", window.innerHeight)
+    Array.prototype.forEach.call(document.getElementsByClassName("fill-window"), element => {
+        let y = element.getBoundingClientRect().top
+        const style = window.getComputedStyle(element)
+        let mg = parseInt(style.marginTop.replace("px", "")) + parseInt(style.marginBottom.replace("px", ""))
+        element.style.maxHeight = `${window.innerHeight - y - mg}px`
+    });
 }
 </script>
 
@@ -30,18 +47,17 @@ function toggle_case_sensitive() {
     <input type="submit" value="Cerca">
 </form>
 
-<section class="list">
+<div style="position: sticky;">{{ count }} {{ count != 1 ? "risultati." : "risultato." }}</div>
+
+<section class="list fill-window">
     <a :href="'/patient/' + patient.CF" class="list-item" v-for="patient in patients_filtered">
-        <div class="list-item-title">{{ patient.Nome }} {{ patient.Cognome }}</div>
-        <div class="list-item-subtitle">{{ patient.CF }}</div>
+        <div class="list-item-title">{{ patient["NOME"] }} {{ patient["COGNOME"] }}</div>
+        <div class="list-item-subtitle">{{ patient["CODICE_FISCALE"] }}</div>
         <div class="list-item-info-wseparator">
-            <span>{{ patient.Data_Nascita }}</span>
-            <span>{{ patient.Indirizzo }}</span>
+            <span>{{ patient["DATA_NASCITA"] }}</span>
+            <span>{{ patient["RESIDENZA"] }}</span>
         </div>
     </a>
-    <div v-if="patients_filtered.length == 0">
-        Nessun paziente trovato.
-    </div>
 </section>
 
 </template>
@@ -50,6 +66,7 @@ function toggle_case_sensitive() {
 form {
     display: flex;
     flex-direction: row;
+    position: sticky;
 }
 form input[type="text"] {
     flex-grow: 1;
@@ -81,9 +98,12 @@ form input[type="text"] {
 }
 .list {
     display: flex;
-    padding: 1rem;
+    margin-top: 1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
     gap: .5rem;
     flex-direction: column;
+    overflow-y: scroll;
 }
 .list-item {
     color: black;
@@ -93,6 +113,7 @@ form input[type="text"] {
     border-radius: .5rem;
     background-color: white;
     cursor: pointer;
+    flex-grow: 1;
 }
 .list-item:hover {
     background-color: color-mix(in srgb, white 95%, black 5%);

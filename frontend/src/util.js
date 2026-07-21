@@ -9,9 +9,13 @@ export async function fetch_path(path) {
             if (response.status === 404) throw new Error('Not found')
             throw new Error('Server error')
         }
-        return response
+        return response.json()
     }
     catch {
         return ""
     }
+}
+
+export function sort(arr, property) {
+    return arr.sort((a, b) => a[property] > b[property] ? 1 : a[property] < b[property] ? -1 : 0)
 }
