@@ -7,8 +7,11 @@ let password = ""
 
 async function login_form(event) {
     event.preventDefault()
-    api_get(`/utente`, new URLSearchParams().append("email", email).append("password", await hash(password)))
-    router.push(`/utente`)
+    const params = new URLSearchParams()
+    params.append("email", email)
+    params.append("password", await hash(password))
+    api_get(`/utente`, params)
+    router.push(`/cerca`) // TODO
 }
 </script>
 
