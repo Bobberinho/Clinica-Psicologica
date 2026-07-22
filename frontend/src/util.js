@@ -2,26 +2,46 @@ export function login(username, password) {
     console.log(`Attempted login with username=${username} password=${password}`)
 }
 
-export async function api_get(path, params, method = "GET") {
+export async function api_get(path, params, method = "GET", payload={}) {
     let response
     console.log(`GETTING http://127.0.0.1:8000${path}?${params}...`)
     console.log(localStorage.getItem("token"))
     try {
-        response = await fetch(`http://127.0.0.1:8000${path}?${params}`, {
-            method: method,
-            headers: {
-                "Token": localStorage.getItem("token")
-            }
-        })
+        if (method == "GET")
+            response = await fetch(`http://127.0.0.1:8000${path}?${params}`, {
+                method: "GET",
+                headers: {
+                    "Token": localStorage.getItem("token")
+                },
+            })
+        else if (method == "POST" && payload == {})
+            response = await fetch(`http://127.0.0.1:8000${path}`, {
+                method: "POST",
+                headers: {
+                    "Token": localStorage.getItem("token"),
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload),
+            })
+        else if (method == "POST")
+            response = await fetch(`http://127.0.0.1:8000${path}?${params}`, {
+                method: "POST",
+                headers: {
+                    "Token": localStorage.getItem("token"),
+                    "Content-Type": "application/json"
+                },
+            })
     }
     finally {
-        if (!response.ok) {
-            const json = await response.json()
-            let message = `${response.status}. `
-            message += typeof json["detail"] !== 'undefined' ? json["detail"] : `${response.statusText}.`
-            throw new Error(message)
+        if (response !== undefined) {
+            if (!response.ok) {
+                const json = await response.json()
+                let message = `${response.status}. `
+                message += typeof json["detail"] !== 'undefined' ? json["detail"] : `${response.statusText}.`
+                throw new Error(message)
+            }
+            return response.json() 
         }
-        return response.json()
     }
 }
 

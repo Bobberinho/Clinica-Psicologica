@@ -11,8 +11,11 @@ get_profile()
 
 async function get_profile() {
 	console.log("logged in!")
-	utente.value = await api_get("/profilo")
-	console.log(utente.value)
+	try {
+		utente.value = await api_get("/profilo")
+	} catch {
+		utente.value = {}
+	}
 }
 
 onMounted(() => {
@@ -31,7 +34,7 @@ function resize_fills() {
 </script>
 
 <template>
-	<header>
+	<header class="site-header">
 		<h1>PsicOk <span>clinica psicologica e psichiatrica</span></h1>
 		<Suspense>
 			<UserWidget></UserWidget>
@@ -39,7 +42,7 @@ function resize_fills() {
 	</header>
 	<nav>
 		<a href="/statistiche" :class="route.path == '/statistiche' ? 'active' : ''">Statistiche</a>
-		<a href="/cerca" :class="route.path == '/cerca' ? 'active' : ''">Ricerca</a>
+		<a href="/cerca" :class="route.path == '/cerca' ? 'active' : ''">Pazienti</a>
 		<a href="/profilo" :class="route.path == '/profilo' ? 'active' : ''">Profilo</a>
 	</nav>
 	<main style="height: 100%;">
@@ -66,18 +69,30 @@ main {
 	grid-template-rows: 1fr;
 	grid-template-columns: 1fr 2fr 1fr;
 }
-header {
+.icon {
+	border: none;
+	border-radius: 50%;
+	background: none;
+	width: 2.5rem;
+	height: 2.5rem;
+	padding: .5rem;
+	display: inline-block;
+}
+.icon:hover {
+	background: rgba(0,0,0,0.05);
+}
+.site-header {
 	padding: 2rem;
 	background: white;
 	border-bottom: 2px solid darkgreen;
 }
-header h1 {
+.site-header h1 {
 	color: limegreen;
 	font-size: 3rem;
 	line-height: 3rem;
 	margin: 0;
 }
-header span {
+.site-header span {
 	color: darkgray;
 	font-size: 2rem;
 }
@@ -85,24 +100,24 @@ nav {
 	display: flex;
 	flex-direction: row;
 	justify-content: center;
-	background-color: limegreen;
+	background-color: rgb(189, 255, 189);
+	box-shadow: 2px 2px 4px gray;
 }
 nav a {
-	padding: 1rem;
+	padding: 1rem 3rem;
 	font-size: 1.2rem;
 	cursor: pointer;
-	color: darkslategray;
-	font-weight: bold;
+	color: black;
 	text-decoration: none;
 }
 nav a:hover {
-	background-color: rgba(0,0,0,0.1);
+	background-color: rgba(0,0,0,0.05);
 }
 nav a.active {
-	background-color: rgba(0, 100, 0, 0.3);
+	background-color: limegreen;
 }
 nav a.active:hover {
-	background-color: rgba(0, 100, 0, 0.4);
+	background-color: color-mix(in srgb, limegreen 90%, darkgreen 10%);
 }
 
 form {
@@ -119,13 +134,14 @@ form {
 	border-bottom: 1px solid black;
 	text-align: center;
 }
-form input {
+form input, textarea, select {
 	padding: 0.8rem;
 	border-radius: .5rem;
 	font-size: 1rem;
 	border: 2px solid darkslategray;
+	flex-grow: 1;
 }
-form input:focus {
+form input:focus, textarea:focus, select:focus {
 	outline: 3px solid palegreen;
 }
 form input[type=submit] {
@@ -135,6 +151,19 @@ form input[type=submit] {
 }
 form input[type=submit]:hover {
 	background-color: color-mix(in srgb, limegreen 90%, rgba(0,0,0,0.5) 10%);
+}
+button {
+	border: 2px solid darkslategray;
+	border-radius: .5rem;
+	padding: .8rem;
+	font-weight: bold;
+	color: darkslategray;
+	font-size: 1rem;
+	display: block;
+	flex-grow: 1;
+}
+button:hover {
+	background-color: gainsboro;
 }
 
 
@@ -190,5 +219,12 @@ form input[type=submit]:hover {
     position: absolute;
     top: calc(50% - 4px);
     left: calc(-0.5rem - 4px);
+}
+
+
+
+
+.error {
+	color: red;
 }
 </style>

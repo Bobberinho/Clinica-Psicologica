@@ -28,7 +28,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 class Dettagli_Prescrizione(BaseModel):
-    ID_Prescrizione: int
+    ID_Prescrizione: int | None
     ID_Farmaco: int
     Posologia: str
     Durata: str
@@ -288,23 +288,23 @@ def get_patients_with_prescriptions(id: int,token: str | None = Header(default=N
         WHERE PAZIENTI.ID = p.ID_Paziente""")
     return res
 
-@app.post("/paziente/{id}/prescrizioni")
+@app.post("/paziente/{id}/prescrizione")
 async def create_prescription(id:int, prescrizione: Prescrizione, token: str | None = Header(default=None) ):
     print("POST_PRESCRIPTION")
     user = authenticate_token(token)
+    print(user)
     conn = connect_to_db()
     try:
         cursor = conn.cursor()
-        cursor.execute("""INSERT INTO PRESCRIZIONI(ID_Paziente,ID_Psichiatra,Data,Note) VALUES(?,?,?,?)""", (id,user["ID_Psichiatra"], prescrizione.Data, prescrizione.Note))
+        cursor.execute("""INSERT INTO PRESCRIZIONI(ID_Paziente,ID_Psichiatra,Data,Note) VALUES(?,?,?,?)""", (id,user["ID_Specialista"], prescrizione.Data, prescrizione.Note))
+        print(cursor.lastrowid)
         for dettaglio in prescrizione.Lista_Dettagli:
-            cursor.execute("""INSERT INTO DETTAGLI_PRESCRIZIONE(ID_Prescrizione,ID_Farmaco,Posologia,Durata) VALUES(?,?,?,?) """,(dettaglio.ID_Prescrizione,dettaglio.ID_Farmaco,dettaglio.Posologia,dettaglio.Durata))
+            cursor.execute("""INSERT INTO DETTAGLI_PRESCRIZIONE(ID_Prescrizione,ID_Farmaco,Posologia,Durata) VALUES(?,?,?,?) """,(cursor.lastrowid, dettaglio.ID_Farmaco,dettaglio.Posologia,dettaglio.Durata))
         conn.commit()
-        rows = []
     finally:
         conn.close()
 
-    if len(rows) == 0:
-        raise HTTPException(status_code=404, detail="Not found!")
+    return get_patients_with_prescriptions(id, token)
 
 
 

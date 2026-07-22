@@ -7,7 +7,7 @@ const utente = ref(inject('utente'))
 
 <template>
 <h1>Profilo Specialista</h1>
-{{ utente.Nome }} {{ utente.Cognome }}
-{{ utente.Email }}
-{{ utente.Numero_Telefono }}
+{{ utente.Nome }} {{ utente.Cognome }}, {{ utente.ruolo }} ()
+<p>{{ utente.Email }}</p>
+<p>{{ utente.Numero_Telefono }}</p>
 </template>

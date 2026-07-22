@@ -1,0 +1,268 @@
+<script setup>
+import { api_get, sort } from '@/util';
+import { computed, ref } from 'vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute()
+
+const form_open = ref(false)
+const farmaci_db = ref([])
+farmaci_db.value = sort(await api_get("/farmaci"), "Nome")
+const farmaci_db_filtered = computed(() => farmaci_db.value.filter((f) => f["Nome"].match(new RegExp(nome_farmaco.value, "i"))))
+
+
+
+const farmaci = ref([])
+const nome_farmaco = ref("")
+const nome_farmaco_error = computed(() => nome_farmaco.value != "" && farmaci_db.value.find(f => f["Nome"] == nome_farmaco.value) === undefined)
+const posologia = ref("")
+const durata = ref("")
+function add_farmaco(event) {
+    event.preventDefault()
+    const farm = {
+        ID_Prescrizione: -1,
+        ID_Farmaco: farmaci_db.value.find(f => f["Nome"] == nome_farmaco.value)["ID"],
+        Nome: nome_farmaco.value,
+        Posologia: posologia.value,
+        Durata: durata.value
+    }
+    farmaci.value.push(farm)
+    secondary_form_open.value = false
+    nome_farmaco.value = ""
+    posologia.value = ""
+    durata.value = ""
+    //console.log(farm)
+}
+function remove_farmaco(idx) {
+    farmaci.value.splice(idx, 1)
+}
+
+const secondary_form_open = ref(false)
+const note = ref("")
+function add_prescrizione(event) {
+    event.preventDefault()
+    const date = new Date().toISOString().split('T', 1)[0]
+    if (farmaci.value != []) {
+        const prescrizione = {
+            ID_Paziente: route.params.id,
+            Note: note.value,
+            Data: date,
+            Lista_Dettagli: []
+        }
+        farmaci.value.forEach((f) => prescrizione["Lista_Dettagli"].push(f))
+        console.log(prescrizione)
+        api_get(`${route.path}/prescrizione`, "", "POST", prescrizione)
+    }
+    // TODO: errore se non c'è almeno un farmaco aggiunto
+}
+function reset() {
+    farmaci.value = []
+    note.value = ""
+    nome_farmaco.value = ""
+    posologia.value = ""
+    durata.value = ""
+    form_open.value = false
+}
+</script>
+
+<template>
+<button v-if="!form_open" @click="form_open = true" class="add-button">
+    <svg height="200px" width="200px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 309.059 309.059" xml:space="preserve" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <g> <path style="fill:#010002;" d="M280.71,126.181h-97.822V28.338C182.889,12.711,170.172,0,154.529,0S126.17,12.711,126.17,28.338 v97.843H28.359C12.722,126.181,0,138.903,0,154.529c0,15.621,12.717,28.338,28.359,28.338h97.811v97.843 c0,15.632,12.711,28.348,28.359,28.348c15.643,0,28.359-12.717,28.359-28.348v-97.843h97.822 c15.632,0,28.348-12.717,28.348-28.338C309.059,138.903,296.342,126.181,280.71,126.181z"></path> </g> </g> </g></svg>
+    <span>Aggiungi una prescrizione</span>
+</button>
+
+<section class="form-container" v-if="form_open">
+    <header>
+        <h3>Nuova Prescrizione</h3>
+    </header>
+    <li class="list compact">
+        <ul class="list-item no-bg" v-for="(farmaco, idx) in farmaci">
+            <div class="list-action">
+                <button class="close-button" @click="remove_farmaco(idx)">
+                    <svg fill="#000000" height="200px" width="200px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 460.775 460.775" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M285.08,230.397L456.218,59.27c6.076-6.077,6.076-15.911,0-21.986L423.511,4.565c-2.913-2.911-6.866-4.55-10.992-4.55 c-4.127,0-8.08,1.639-10.993,4.55l-171.138,171.14L59.25,4.565c-2.913-2.911-6.866-4.55-10.993-4.55 c-4.126,0-8.08,1.639-10.992,4.55L4.558,37.284c-6.077,6.075-6.077,15.909,0,21.986l171.138,171.128L4.575,401.505 c-6.074,6.077-6.074,15.911,0,21.986l32.709,32.719c2.911,2.911,6.865,4.55,10.992,4.55c4.127,0,8.08-1.639,10.994-4.55 l171.117-171.12l171.118,171.12c2.913,2.911,6.866,4.55,10.993,4.55c4.128,0,8.081-1.639,10.992-4.55l32.709-32.719 c6.074-6.075,6.074-15.909,0-21.986L285.08,230.397z"></path> </g></svg>
+                </button>
+            </div>
+            <div class="list-item-title">
+                <svg class="list-item-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M9 14H15M12 11V17M8 7V9L6.21115 12.5777C6.07229 12.8554 6 13.1616 6 13.4721V19C6 20.1046 6.89543 21 8 21H16C17.1046 21 18 20.1046 18 19V13.4721C18 13.1616 17.9277 12.8554 17.7889 12.5777L16 9V7M8 7H16M8 7C7.44772 7 7 6.55228 7 6V5C7 4.44772 7.44772 4 8 4H16C16.5523 4 17 4.44772 17 5V6C17 6.55228 16.5523 7 16 7" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
+                {{ farmaco["Nome"] }}
+            </div>
+            <div class=""><strong>Dosaggio: </strong>{{ farmaco["Posologia"] }}</div>
+            <div class=""><strong>Durata del trattamento: </strong>{{ farmaco["Durata"] }}</div>
+        </ul>
+        <button v-if="!secondary_form_open" @click="secondary_form_open = true" class="add-button simple">
+            <svg height="200px" width="200px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 309.059 309.059" xml:space="preserve" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <g> <path style="fill:#010002;" d="M280.71,126.181h-97.822V28.338C182.889,12.711,170.172,0,154.529,0S126.17,12.711,126.17,28.338 v97.843H28.359C12.722,126.181,0,138.903,0,154.529c0,15.621,12.717,28.338,28.359,28.338h97.811v97.843 c0,15.632,12.711,28.348,28.359,28.348c15.643,0,28.359-12.717,28.359-28.348v-97.843h97.822 c15.632,0,28.348-12.717,28.348-28.338C309.059,138.903,296.342,126.181,280.71,126.181z"></path> </g> </g> </g></svg>
+            <span>Aggiungi un farmaco</span>
+        </button>
+    </li>
+    <form v-if="secondary_form_open" class="form-secondary" @submit="add_farmaco">
+        <div class="dropdown-search">
+            <input required type="text" :class="nome_farmaco_error ? 'error' : ''" v-model="nome_farmaco" placeholder="Farmaco...">
+            <div class="options">
+                <div class="option" @mousedown="nome_farmaco = farmaco['Nome']" v-for="farmaco in farmaci_db_filtered" :key="farmaco['ID']">{{ farmaco["Nome"] }}</div>
+            </div>
+        </div>
+        <input required type="text" v-model="posologia" placeholder="Posologia...">
+        <input required type="text" v-model="durata" placeholder="Durata del trattamento...">
+        <input type="submit" value="Aggiungi Farmaco">
+    </form>
+
+    <form @submit="add_prescrizione">
+        <textarea placeholder="Note..." v-model="note"></textarea>
+        <div style="display: flex; gap: .5rem;">
+            <button @click="reset()">Annulla</button>
+            <input type="submit" value="Conferma Prescrizione">
+        </div>
+    </form>
+</section>
+
+</template>
+
+<style scoped>
+.list.compact {
+    padding: .5rem;
+    background: whitesmoke;
+}
+.list.compact .list-item-title {
+    font-size: 1.1rem;
+}
+.list.compact .list-item-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+.list.compact .list-item-icon path {
+    stroke: black;
+}
+.list-item.no-bg {
+    border: none;
+    margin: 0;
+}
+.list-item.no-bg:hover {
+    box-shadow: 1px 1px 4px gray;
+}
+.list-action {
+    position: absolute;
+    top: .5rem;
+    right: .5rem;
+}
+.close-button {
+    border-radius: 50%;
+    padding: .5rem;
+    height: 2rem;
+    width: 2rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+.close-button:hover {
+    background-color: rgba(255, 0, 0, 0.1);
+}
+.close-button svg {
+    width: 100%;
+    height: 100%;
+}
+.close-button svg path {
+    fill: red;
+}
+
+
+.form-container {
+    border: 2px solid darkgreen;
+    background: white;
+    border-radius: .8rem;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.form-container header {
+    border-bottom: none;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    display: flex;
+    justify-content: space-between;
+}
+h3 {
+    margin: 0;
+}
+form {
+    margin: 0;
+    padding: 0;
+}
+.form-secondary {
+    padding: 0;
+}
+.add-button {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    line-height: 1.2rem;
+    gap: 1rem;
+    border-radius: .8rem;
+    box-shadow: 1px 1px 4px gray;
+}
+.add-button.simple {
+    box-shadow: none;
+}
+.add-button:hover {
+    background-color: rgba(0, 255, 0, 0.05);
+    box-shadow: 1px 1px 4px darkolivegreen;
+}
+.add-button.simple:hover {
+    background: white;
+    box-shadow: 1px 1px 4px gray;
+}
+.add-button svg {
+    width: 1rem;
+    height: 1rem;
+}
+.dropdown-search {
+    position: relative;
+}
+.dropdown-search input {
+    display: block;
+    width: 100%;
+    box-shadow: none;
+}
+.dropdown-search input.error {
+    outline: 3px solid red !important;
+    color: red;
+}
+.dropdown-search:has(> input:focus) {
+    box-shadow: 3px 3px 4px darkolivegreen;
+}
+.dropdown-search input:focus {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+.dropdown-search .options {
+    flex-direction: column;
+    background: white;
+    max-height: 10rem;
+    overflow: scroll;
+    position: absolute;
+    width: calc(100% + 6px);
+    border: 3px solid palegreen;
+    border-top: none;
+    left: -3px;
+    box-shadow: 1px 1px 4px darkolivegreen;
+    border-bottom-left-radius: .8rem;
+    border-bottom-right-radius: .8rem;
+    display: none;
+}
+.dropdown-search input:focus ~ .options {
+    display: flex;
+}
+.option {
+    padding: .7rem 1rem;
+}
+.option:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+</style>
