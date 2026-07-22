@@ -2,49 +2,43 @@ export function login(username, password) {
     console.log(`Attempted login with username=${username} password=${password}`)
 }
 
-export async function api_get(path, params) {
+export async function api_get(path, params, method = "GET") {
+    let response
+    console.log(`GETTING http://127.0.0.1:8000${path}?${params}...`)
+    console.log(localStorage.getItem("token"))
     try {
-        const response = await fetch(`http://127.0.0.1:8000${path}?${params}`, {
-            method: "GET",
+        response = await fetch(`http://127.0.0.1:8000${path}?${params}`, {
+            method: method,
             headers: {
                 "Token": localStorage.getItem("token")
             }
         })
+    }
+    finally {
         if (!response.ok) {
-            if (response.status === 404) throw new Error('Not found')
-            throw new Error('Server error')
+            const json = await response.json()
+            let message = `${response.status}. `
+            message += typeof json["detail"] !== 'undefined' ? json["detail"] : `${response.statusText}.`
+            throw new Error(message)
         }
-        console.log(`GET http://127.0.0.1:8000${path}?${params}`)
         return response.json()
     }
-    catch {
-        return ""
-    }
 }
-export async function api_post(path, params) {
-    try {
-        const response = await fetch(`http://127.0.0.1:8000${path}?${params}`, {
-            method: "POST",
-        })
-        if (!response.ok) {
-            if (response.status === 404) throw new Error('Not found')
-            throw new Error('Server error')
-        }
-        console.log(`http://127.0.0.1:8000${path}?${params}`)
-        return response.json()
-    }
-    catch {
-        return ""
-    }
-}
+
 export async function api_login(email, password) {
     const params = new URLSearchParams()
     params.append("email", email)
     params.append("password", await hash(password))
-    const token = await api_post("/login", params)
+    const token = await api_get("/login", params, "POST")
     localStorage.setItem("token", token.token)
     localStorage.setItem("token_type", token.type)
     console.log(localStorage.getItem("token"), localStorage.getItem("token_type"))
+}
+export async function api_logout() {
+    console.log("LOGOUT")
+    localStorage.setItem("token", "")
+    localStorage.setItem("token_type", "")
+    window.location.href = "/"
 }
 
 export async function hash(text) {

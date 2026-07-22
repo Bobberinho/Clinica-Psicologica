@@ -1,15 +1,22 @@
 <script setup>
+import { useRoute } from 'vue-router';
+import UserWidget from './components/UserWidget.vue';
 
+
+const route = useRoute()
 </script>
 
 <template>
 	<header>
 		<h1>PsicOk <span>clinica psicologica e psichiatrica</span></h1>
+		<Suspense>
+			<UserWidget></UserWidget>
+		</Suspense>
 	</header>
 	<nav>
-		<a>Statistiche</a>
-		<a>Ricerca</a>
-		<a>Profilo</a>
+		<a href="/statistiche" :class="route.path == '/statistiche' ? 'active' : ''">Statistiche</a>
+		<a href="/cerca" :class="route.path == '/cerca' ? 'active' : ''">Ricerca</a>
+		<a href="/profilo" :class="route.path == '/profilo' ? 'active' : ''">Profilo</a>
 	</nav>
 	<main style="height: 100%;">
 		<section style="grid-column: 2; height: 100%;">
@@ -60,9 +67,18 @@ nav a {
 	padding: 1rem;
 	font-size: 1.2rem;
 	cursor: pointer;
+	color: darkslategray;
+	font-weight: bold;
+	text-decoration: none;
 }
 nav a:hover {
 	background-color: rgba(0,0,0,0.1);
+}
+nav a.active {
+	background-color: rgba(0, 100, 0, 0.3);
+}
+nav a.active:hover {
+	background-color: rgba(0, 100, 0, 0.4);
 }
 
 form {

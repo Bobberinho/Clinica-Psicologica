@@ -28,7 +28,7 @@ onMounted(() => {
 })
 window.addEventListener("resize", resize_fills)
 function resize_fills() {
-    console.log("resized", window.innerHeight)
+    // console.log("resized", window.innerHeight)
     Array.prototype.forEach.call(document.getElementsByClassName("fill-window"), element => {
         let y = element.getBoundingClientRect().top
         const style = window.getComputedStyle(element)
@@ -50,7 +50,7 @@ function resize_fills() {
 <div style="position: sticky;">{{ count }} {{ count != 1 ? "risultati." : "risultato." }}</div>
 
 <section class="list fill-window">
-    <a :href="'/patient/' + patient.CF" class="list-item" v-for="patient in patients_filtered">
+    <a :href="'/paziente/' + patient.ID" class="list-item" v-for="patient in patients_filtered" :key="patient.ID">
         <div class="list-item-title">{{ patient["Nome"] }} {{ patient["Cognome"] }}</div>
         <div class="list-item-subtitle">{{ patient["Codice_Fiscale"] }}</div>
         <div class="list-item-info-wseparator">

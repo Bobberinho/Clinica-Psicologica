@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from typing import Any, Tuple
 
 from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,37 +22,32 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware, 
-    allow_origins=["*"], # Default Vite/Vue dev port
+    allow_origins=["*"],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-class User(BaseModel):
-    email: str | None = None
-    full_name: str | None = None
-    disabled: bool | None = None
-
-
-class UserInDB(User):
-    hashed_password: str
-
 def check_pwd(email: str, password: str):
     conn = connect_to_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM SPECIALISTI WHERE Email = ? AND Password = ?", (email,password))
-    user = dict(cursor.fetchone())
+    user = cursor.fetchone()
+    if user is None:
+        raise HTTPException(404, "Wrong email or password.")
     conn.close()
-    return user
+    return dict(user)
 
 def check_email(email: str):
     conn = connect_to_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM SPECIALISTI WHERE Email = ?", (email,))
-    user = dict(cursor.fetchone())
+    user = cursor.fetchone()
+    if user is None:
+        raise HTTPException(401, "Unauthorized: invalid email.")
     conn.close()
-    return user
+    return dict(user)
 
 def authenticate_token(token:str):
     credentials_exception = HTTPException(
@@ -89,6 +85,15 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 
 
+
+
+
+
+
+
+
+
+
 # ENDPOINTS
 
 def connect_to_db():
@@ -97,13 +102,47 @@ def connect_to_db():
     conn.row_factory = sqlite3.Row
     return conn
 
+def query_single_row(token: str | None, query: str, params: Tuple[Any, ...] = ()) -> dict:
+    authenticate_token(token) # può lanciare 401 exeption
+    conn = connect_to_db()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        row = cursor.fetchone()
+    finally:
+        conn.close()
+
+    if row is None:
+        raise HTTPException(status_code=404, detail="Not found!")
+
+    result_dict = dict(row)
+    print(result_dict)
+    return result_dict
+
+def query_all_rows(token: str | None, query: str, params: Tuple[Any, ...] = ()) -> dict:
+    authenticate_token(token) # può lanciare 401 exeption
+    conn = connect_to_db()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+    finally:
+        conn.close()
+
+    if len(rows) == 0:
+        raise HTTPException(status_code=404, detail="Not found!")
+
+    result_dict = [dict(row) for row in rows]
+    print(result_dict)
+    return result_dict
+
 
 @app.post("/login")
 async def login(email:str, password:str):
     print("LOGIN")
     user = check_pwd(email, password)
-    
     if not user:
+        print("NO USER")
         raise HTTPException(
             status_code=401,
             detail="Incorrect username or password",
@@ -111,47 +150,25 @@ async def login(email:str, password:str):
         )
     # access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(data={"email": user["Email"]}, expires_delta=None)
-    
     return { "token": access_token, "type": "bearer" }
+
+@app.get("/profilo")
+async def current_user(token: str | None = Header(default=None)):
+    print("GET_CURRENT_USER")
+    user = authenticate_token(token)
+    return user
 
 @app.get("/paziente/{id}")
 def get_patient(id: int, token: str | None = Header(default=None)):
     print("GET_PATIENT")
-    authenticate_token(token)
-    conn = connect_to_db()
-    cursor = conn.cursor()
-    
-    # Use a parameterized query (?) to prevent SQL injection
-    cursor.execute("SELECT * FROM PAZIENTI WHERE ID = ?", (id,))
-    row = cursor.fetchone()
-    conn.close()
-    
-    if row is None:
-        raise HTTPException(status_code=404, detail="Not found!")
-        
-    # Convert the SQLite row object into a standard Python dictionary to send as JSON
-    print(dict(row))
-    return dict(row)
+    res = query_single_row(token, "SELECT * FROM PAZIENTI WHERE ID = ?", (id,))
+    return dict(res)
 
 
 @app.get("/pazienti")
 def get_patient(token: str | None = Header(default=None)):
     print("GET_PATIENTS")
-    authenticate_token(token)
-    conn = connect_to_db()
-    cursor = conn.cursor()
-    
-    # Use a parameterized query (?) to prevent SQL injection
-    cursor.execute("SELECT * FROM PAZIENTI")
-    rows = cursor.fetchall()
-    conn.close()
-    
-    if rows is None:
-        raise HTTPException(status_code=404, detail="Not found!")
-        
-    # Convert the SQLite row object into a standard Python dictionary to send as JSON
-    ret = [dict(row) for row in rows]
-    print(ret)
+    ret = query_all_rows(token, "SELECT * FROM PAZIENTI")
     return ret
 
 # uvicorn endpoint:app --reload
