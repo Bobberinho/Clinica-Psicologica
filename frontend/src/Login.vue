@@ -5,11 +5,13 @@ import { useTemplateRef } from 'vue'
 
 let email = ""
 let password = ""
+const emit = defineEmits(["login"])
 
 async function login_form(event) {
     event.preventDefault()
     try {
         const res = await api_login(email, password)
+        emit("login")
         router.push(`/profilo`)
     } catch (error) {
         email = ""

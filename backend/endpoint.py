@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from typing import Any, Tuple
+from typing import Any, List, Tuple
 
 from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
@@ -33,10 +33,10 @@ class Dettagli_Prescrizione(BaseModel):
     Posologia: str
     Durata: str
 class Prescrizione(BaseModel):
-        ID_Paziente: int
-        Data: str
-        Note: str
-        Lista_Dettagli: list(Dettagli_Prescrizione)
+    ID_Paziente: int
+    Data: str
+    Note: str
+    Lista_Dettagli: List[Dettagli_Prescrizione]
 
 def check_pwd(email: str, password: str):
     conn = connect_to_db()
@@ -52,30 +52,24 @@ def check_email(email: str):
     conn = connect_to_db()
     cursor = conn.cursor()
     cursor.execute(
-        """SELECT 
-    s.ID_Specialista,
-    s.Nome,
-    s.Cognome,
-    s.Numero_Telefono,
-    s.Email,
-    s.Password,
-    -- Booleano: 1 se è Psichiatra, 0 se è Psicoterapeuta
-    CASE 
-        WHEN psi.ID_Specialista IS NOT NULL THEN 1 
-        ELSE 0 
-    END AS Is_Psichiatra,
-    -- Stringa con il ruolo
-    CASE 
-        WHEN psi.ID_Specialista IS NOT NULL THEN 'psichiatra' 
-        ELSE 'psicoterapeuta' 
-    END AS ruolo,
-    -- Informazioni specifiche delle rispettive tabelle
-    psi.Numero_Iscrizione_Medici,
-    pst.Albo_Psicoterapeuti
-FROM SPECIALISTI s
-LEFT JOIN PSICHIATRI psi ON s.ID_Specialista = psi.ID_Specialista
-LEFT JOIN PSICOTERAPEUTI pst ON s.ID_Specialista = pst.ID_Specialista
-WHERE s.Email = ?;""", (email,))
+        """SELECT s.ID_Specialista, s.Nome, s.Cognome, s.Numero_Telefono, s.Email, s.Password,
+            -- Booleano: 1 se è Psichiatra, 0 se è Psicoterapeuta
+            CASE 
+                WHEN psi.ID_Specialista IS NOT NULL THEN 1 
+                ELSE 0 
+            END AS Is_Psichiatra,
+            -- Stringa con il ruolo
+            CASE 
+                WHEN psi.ID_Specialista IS NOT NULL THEN 'psichiatra' 
+                ELSE 'psicoterapeuta' 
+            END AS ruolo,
+            -- Informazioni specifiche delle rispettive tabelle
+            psi.Numero_Iscrizione_Medici,
+            pst.Albo_Psicoterapeuti
+            FROM SPECIALISTI s
+            LEFT JOIN PSICHIATRI psi ON s.ID_Specialista = psi.ID_Specialista
+            LEFT JOIN PSICOTERAPEUTI pst ON s.ID_Specialista = pst.ID_Specialista
+            WHERE s.Email = ?;""", (email,))
     user = cursor.fetchone()
     if user is None:
         raise HTTPException(401, "Unauthorized: invalid email.")
@@ -252,17 +246,27 @@ def get_prescrizione(id:int,token: str | None = Header(default=None)):
     return res
 
 @app.post("/paziente/{id}/prescrizioni")
-async def create_prescription(id:int,prescrizione: Prescrizione, dettagli_prescrizione: Dettagli_Prescrizione, token: str | None = Header(default=None) ):
+async def create_prescription(id:int, prescrizione: Prescrizione, token: str | None = Header(default=None) ):
     print("POST_PRESCRIPTION")
     user = authenticate_token(token)
-    query_single_row(token,
-        """INSERT 
-            INTO PRESCRIZIONI(ID_Paziente,ID_Psichiatra,Data,Note)
-            VALUES(?,?,?,?)""", (prescrizione.ID_Paziente,user["ID_Psichiatra"], prescrizione.Data, prescrizione.Note)
-                         )
-    for i in prescrizione.Lista_Dettagli:
-        query_single_row(token,
-            """ INSERT
-                INTO DETTAGLI_PRESCRIZIONE(ID_Prescrizione,ID_Farmaco,Posologia,Durata)
-                VALUES(?,?,?,?) """,(dettagli_prescrizione.ID_Prescrizione,dettagli_prescrizione.ID_Farmaco,dettagli_prescrizione.Posologia,dettagli_prescrizione.Durata))
+    conn = connect_to_db()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""INSERT INTO PRESCRIZIONI(ID_Paziente,ID_Psichiatra,Data,Note) VALUES(?,?,?,?)""", (id,user["ID_Psichiatra"], prescrizione.Data, prescrizione.Note))
+        for dettaglio in prescrizione.Lista_Dettagli:
+            cursor.execute("""INSERT INTO DETTAGLI_PRESCRIZIONE(ID_Prescrizione,ID_Farmaco,Posologia,Durata) VALUES(?,?,?,?) """,(dettaglio.ID_Prescrizione,dettaglio.ID_Farmaco,dettaglio.Posologia,dettaglio.Durata))
+        conn.commit()
+        rows = []
+    finally:
+        conn.close()
+
+    if len(rows) == 0:
+        raise HTTPException(status_code=404, detail="Not found!")
+
+
+
+
+
+
+    
 # uvicorn endpoint:app --reload

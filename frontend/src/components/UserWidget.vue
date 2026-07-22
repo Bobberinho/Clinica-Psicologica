@@ -1,21 +1,9 @@
 <script setup>
 import { api_get, api_logout } from '@/util';
-import { ref } from 'vue';
+import { computed, inject, ref } from 'vue';
 
-const utente = ref({})
-const error = ref(false)
-await getUser()
-
-window.addEventListener('popstate', getUser);
-
-async function getUser() {
-    console.log("tried")
-    try {
-        utente.value = await api_get('/profilo')
-    } catch {
-        error.value = true
-    }
-}
+const utente = ref(inject("utente"))
+const error = computed(() => utente.value == {})
 </script>
 
 

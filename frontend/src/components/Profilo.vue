@@ -1,7 +1,7 @@
 <script setup>
-import { api_get } from '@/util';
+import { computed, inject, ref } from 'vue';
 
-const utente = await api_get("/profilo")
+const utente = ref(inject('utente'))
 </script>
 
 

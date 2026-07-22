@@ -23,19 +23,6 @@ function toggle_case_sensitive() {
     case_sensitive = !case_sensitive
     document.getElementById("case-sensitive-btn").classList.toggle('active')
 }
-onMounted(() => {
-    resize_fills()
-})
-window.addEventListener("resize", resize_fills)
-function resize_fills() {
-    // console.log("resized", window.innerHeight)
-    Array.prototype.forEach.call(document.getElementsByClassName("fill-window"), element => {
-        let y = element.getBoundingClientRect().top
-        const style = window.getComputedStyle(element)
-        let mg = parseInt(style.marginTop.replace("px", "")) + parseInt(style.marginBottom.replace("px", ""))
-        element.style.maxHeight = `${window.innerHeight - y - mg}px`
-    });
-}
 </script>
 
 <template>
@@ -95,51 +82,5 @@ form input[type="text"] {
 .icon-btn svg {
     width: 2rem;
     height: 2rem;
-}
-.list {
-    display: flex;
-    margin-top: 1rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    gap: .5rem;
-    flex-direction: column;
-    overflow-y: scroll;
-}
-.list-item {
-    color: black;
-    text-decoration: none;
-    padding: .8rem;
-    border: 2px solid darkgreen;
-    border-radius: .5rem;
-    background-color: white;
-    cursor: pointer;
-    flex-grow: 1;
-}
-.list-item:hover {
-    background-color: color-mix(in srgb, white 95%, black 5%);
-}
-.list-item-title {
-    font-weight: bold;
-}
-.list-item-subtitle {
-    color: gray;
-}
-.list-item-info-wseparator {
-    margin-top: .2rem;
-    display: flex;
-    gap: 1rem;
-}
-.list-item-info-wseparator span {
-    position: relative;
-}
-.list-item-info-wseparator span ~ span::before {
-    content: "";
-    width: 8px;
-    height: 8px;
-    border-radius: 100%;
-    background-color: lightgray;
-    position: absolute;
-    top: calc(50% - 4px);
-    left: calc(-0.5rem - 4px);
 }
 </style>

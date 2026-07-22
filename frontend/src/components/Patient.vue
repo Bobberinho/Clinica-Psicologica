@@ -1,15 +1,14 @@
 <script setup>
 import { useRoute } from 'vue-router';
-import { ref } from 'vue';
+import { inject, ref } from 'vue';
 import { api_get } from '@/util';
 import List from './List.vue';
 const route = useRoute()
 const id = route.params.id
 const patient = ref(await api_get(`/paziente/${id}`))
-console.log(patient)
+const utente = inject("utente")
+const is_psichiatra = false
 
-// query per ottenere i dati del paziente
-// const patient = { Nome: "Sara", Cognome: "Cappelli", CF: "CPPSRA05T62C573F", Data_Nascita: "22/12/2005", Indirizzo: "Via Redichiaro 2020, Cesena (FC)" }
 </script>
 
 <template>
@@ -23,7 +22,7 @@ console.log(patient)
     <a>Test</a>
 </nav>
 
-<List query="/paziente/1/diagnosi">
+<List query="/paziente/4/prescrizioni" title="Prescrizioni">
 
 </List>
 
