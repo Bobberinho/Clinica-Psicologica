@@ -218,10 +218,10 @@ def get_diagnosi(id: int, token: str | None = Header(default=None)):
 def get_prescrizione(id:int,token: str | None = Header(default=None)):
     print("GET_PATIENT_PRESCRIPTION")
     res = query_all_rows(token,
-        """SELECT 
-            p.ID AS ID_Prescrizione,
-            p.Data,
-            p.Note AS Note_Prescrizione,
+        """ p.Note AS Note_Prescrizione,
+            p.ID_Psichiatra,
+            s.Nome AS Nome_Psichiatra,
+            s.Cognome AS Cognome_Psichiatra,
             f.Nome AS Nome_Farmaco,
             f.Principio_Attivo,
             f.Forma_Farmaceutica,
@@ -233,6 +233,8 @@ def get_prescrizione(id:int,token: str | None = Header(default=None)):
         ON p.ID = dp.ID_Prescrizione
         JOIN FARMACI f 
             ON dp.ID_Farmaco = f.ID
+        JOIN SPECIALISTI s
+            ON p.ID_Psichiatra = s.ID_Specialista
         WHERE p.ID_Paziente = ?
         ORDER BY p.Data DESC;""", (id,))
     return res
