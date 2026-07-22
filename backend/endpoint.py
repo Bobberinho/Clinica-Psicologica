@@ -194,9 +194,14 @@ def get_patient(id: int, token: str | None = Header(default=None)):
 @app.get("/pazienti")
 def get_patient(token: str | None = Header(default=None)):
     print("GET_PATIENTS")
-    ret = query_all_rows(token, "SELECT * FROM PAZIENTI")
-    return ret
+    res = query_all_rows(token, "SELECT * FROM PAZIENTI")
+    return res
 
+@app.get("/farmaci")
+def get_meds(token: str | None = Header(default=None)):
+    print("GET_MEDS")
+    res = query_all_rows(token,"SELECT * FROM FARMACI")
+    return res
 @app.get("/paziente/{id}/diagnosi")
 def get_diagnosi(id: int, token: str | None = Header(default=None)):
     print("GET_PATIENT_DIAGNOSIS")
