@@ -202,8 +202,9 @@ def get_meds(token: str | None = Header(default=None)):
     print("GET_MEDS")
     res = query_all_rows(token,"SELECT * FROM FARMACI")
     return res
+
 @app.get("/paziente/{id}/diagnosi")
-def get_diagnosi(id: int, token: str | None = Header(default=None)):
+def get_diagnosis(id: int, token: str | None = Header(default=None)):
     print("GET_PATIENT_DIAGNOSIS")
     res = query_all_rows(token,
          """SELECT 
@@ -223,7 +224,7 @@ def get_diagnosi(id: int, token: str | None = Header(default=None)):
     return res
 
 @app.get("/paziente/{id}/prescrizioni")
-def get_prescrizione(id:int,token: str | None = Header(default=None)):
+def get_prescriptions(id: int,token: str | None = Header(default=None)):
     print("GET_PATIENT_PRESCRIPTION")
     res = query_all_rows(token,
         """ SELECT 
@@ -248,6 +249,43 @@ def get_prescrizione(id:int,token: str | None = Header(default=None)):
             ON p.ID_Psichiatra = s.ID_Specialista
         WHERE p.ID_Paziente = ?
         ORDER BY p.Data DESC;""", (id,))
+    return res
+
+@app.get("/diffusione_disturbi")
+def get_mental_disorders(id: int,token: str | None = Header(default=None)):
+    print("GET_MENTAL_DISORDERS")
+    res=query_all_rows(token, 
+        """ SELECT 
+            d.Nome AS Disturbo,
+            d.Categoria,
+        COUNT(DISTINCT diag.ID_Paziente) AS Numero_Pazienti,
+        ROUND(
+            (COUNT(DISTINCT diag.ID_Paziente) * 100.0) / (SELECT COUNT(*) FROM PAZIENTI), 2
+        ) AS Percentuale_Pazienti
+        FROM DIAGNOSI diag
+        JOIN DISTURBI d ON diag.ID_Disturbo = d.ID
+        GROUP BY d.ID, d.Nome, d.Categoria
+        ORDER BY Percentuale_Pazienti DESC;
+
+""")
+    return res
+
+@app.get("/numero_sedute_mese")
+def get_session_count_this_month(id: int,token: str | None = Header(default=None)):
+    print("GET_SESSION_COUNT")
+    res=query_single_row(token,
+        """SELECT COUNT(*) from SEDUTE
+        WHERE SEDUTE.Data BETWEEN datetime('now', 'start of month') AND datetime('now', 'localtime');""")
+    return res
+
+@app.get("/elenco_pazienti_con_prescrizione")
+def get_patients_with_prescriptions(id: int,token: str | None = Header(default=None)):
+    print("GET_PATIENTS_WITH_PRESCRIPTIONS")
+    res=query_all_rows(token,
+        """SELECT Nome, Cognome from PAZIENTI
+        JOIN PRESCRIZIONI p
+        ON PAZIENTI.ID = p.ID_Paziente
+        WHERE PAZIENTI.ID = p.ID_Paziente""")
     return res
 
 @app.post("/paziente/{id}/prescrizioni")
