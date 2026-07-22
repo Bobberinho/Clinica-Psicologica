@@ -27,7 +27,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+class Dettagli_Prescrizione(BaseModel):
+    ID_Prescrizione: int
+    ID_Farmaco: int
+    Posologia: str
+    Durata: str
+class Prescrizione(BaseModel):
+        ID_Paziente: int
+        Data: str
+        Note: str
+        Lista_Dettagli: list(Dettagli_Prescrizione)
 
 def check_pwd(email: str, password: str):
     conn = connect_to_db()
@@ -213,7 +222,7 @@ def get_diagnosi(id: int, token: str | None = Header(default=None)):
         ON DIAGNOSI.ID_Disturbo = DISTURBI.ID
     WHERE PAZIENTI.ID = ?;""", (id,))
     return res
-# orribile, sì, ma funziona! (ti prego dimmi che funziona bene, ci ho impiegato 15 min solo per ricordarmi le Join)
+
 @app.get("/paziente/{id}/prescrizioni")
 def get_prescrizione(id:int,token: str | None = Header(default=None)):
     print("GET_PATIENT_PRESCRIPTION")
@@ -242,4 +251,18 @@ def get_prescrizione(id:int,token: str | None = Header(default=None)):
         ORDER BY p.Data DESC;""", (id,))
     return res
 
+@app.post("/paziente/{id}/prescrizioni")
+async def create_prescription(id:int,prescrizione: Prescrizione, dettagli_prescrizione: Dettagli_Prescrizione, token: str | None = Header(default=None) ):
+    print("POST_PRESCRIPTION")
+    user = authenticate_token(token)
+    query_single_row(token,
+        """INSERT 
+            INTO PRESCRIZIONI(ID_Paziente,ID_Psichiatra,Data,Note)
+            VALUES(?,?,?,?)""", (prescrizione.ID_Paziente,user["ID_Psichiatra"], prescrizione.Data, prescrizione.Note)
+                         )
+    for i in prescrizione.Lista_Dettagli:
+        query_single_row(token,
+            """ INSERT
+                INTO DETTAGLI_PRESCRIZIONE(ID_Prescrizione,ID_Farmaco,Posologia,Durata)
+                VALUES(?,?,?,?) """,(dettagli_prescrizione.ID_Prescrizione,dettagli_prescrizione.ID_Farmaco,dettagli_prescrizione.Posologia,dettagli_prescrizione.Durata))
 # uvicorn endpoint:app --reload
