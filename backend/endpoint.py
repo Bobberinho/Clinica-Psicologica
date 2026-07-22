@@ -42,7 +42,31 @@ def check_pwd(email: str, password: str):
 def check_email(email: str):
     conn = connect_to_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM SPECIALISTI WHERE Email = ?", (email,))
+    cursor.execute(
+        """SELECT 
+    s.ID_Specialista,
+    s.Nome,
+    s.Cognome,
+    s.Numero_Telefono,
+    s.Email,
+    s.Password,
+    -- Booleano: 1 se è Psichiatra, 0 se è Psicoterapeuta
+    CASE 
+        WHEN psi.ID_Specialista IS NOT NULL THEN 1 
+        ELSE 0 
+    END AS Is_Psichiatra,
+    -- Stringa con il ruolo
+    CASE 
+        WHEN psi.ID_Specialista IS NOT NULL THEN 'psichiatra' 
+        ELSE 'psicoterapeuta' 
+    END AS ruolo,
+    -- Informazioni specifiche delle rispettive tabelle
+    psi.Numero_Iscrizione_Medici,
+    pst.Albo_Psicoterapeuti
+FROM SPECIALISTI s
+LEFT JOIN PSICHIATRI psi ON s.ID_Specialista = psi.ID_Specialista
+LEFT JOIN PSICOTERAPEUTI pst ON s.ID_Specialista = pst.ID_Specialista
+WHERE s.Email = ?;""", (email,))
     user = cursor.fetchone()
     if user is None:
         raise HTTPException(401, "Unauthorized: invalid email.")
