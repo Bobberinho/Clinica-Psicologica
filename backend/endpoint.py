@@ -174,29 +174,31 @@ def get_patient(token: str | None = Header(default=None)):
 def get_diagnosi(id: int, token: str | None = Header(default=None)):
     print("GET_PATIENT_DIAGNOSIS")
     res = query_single_row(token, "SELECT * FROM diagnosi WHERE ID = ?", (id,))
-    return dict(res)
+    return res
 # orribile, sì, ma funziona! (ti prego dimmi che funziona bene, ci ho impiegato 15 min solo per ricordarmi le Join)
-@app.get("/paziente/{id}/prescrizione")
+@app.get("/paziente/{id}/prescrizioni")
 def get_prescrizione(id:int,token: str | None = Header(default=None)):
     print("GET_PATIENT_PRESCRIPTION")
-    res = query_single_row(token, """SELECT 
-    p.ID AS ID_Prescrizione,
-    p.Data,
-    p.Note AS Note_Prescrizione,
-    p.ID_Psichiatra,
-    dp.ID_Farmaco,
-    f.Nome AS Nome_Farmaco,
-    f.Principio_Attivo,
-    f.Forma_Farmaceutica,
-    f.Dosaggio,
-    dp.Posologia,
-    dp.Durata
-FROM PRESCRIZIONI p
-JOIN DETTAGLI_PRESCRIZIONE dp 
-    ON p.ID = dp.ID_Prescrizione
-JOIN FARMACI f 
-    ON dp.ID_Farmaco = f.ID
-WHERE p.ID_Paziente = :ID_PAZIENTE
-ORDER BY p.Data DESC;""", (id,))
+    res = query_all_rows(token,
+        """SELECT 
+            p.ID AS ID_Prescrizione,
+            p.Data,
+            p.Note AS Note_Prescrizione,
+            p.ID_Psichiatra,
+            dp.ID_Farmaco,
+            f.Nome AS Nome_Farmaco,
+            f.Principio_Attivo,
+            f.Forma_Farmaceutica,
+            f.Dosaggio,
+            dp.Posologia,
+            dp.Durata
+        FROM PRESCRIZIONI p
+        JOIN DETTAGLI_PRESCRIZIONE dp 
+        ON p.ID = dp.ID_Prescrizione
+        JOIN FARMACI f 
+            ON dp.ID_Farmaco = f.ID
+        WHERE p.ID_Paziente = ?
+        ORDER BY p.Data DESC;""", (id,))
+    return res
 
 # uvicorn endpoint:app --reload
