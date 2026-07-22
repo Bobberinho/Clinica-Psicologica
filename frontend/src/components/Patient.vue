@@ -2,6 +2,7 @@
 import { useRoute } from 'vue-router';
 import { ref } from 'vue';
 import { api_get } from '@/util';
+import List from './List.vue';
 const route = useRoute()
 const id = route.params.id
 const patient = ref(await api_get(`/paziente/${id}`))
@@ -16,11 +17,15 @@ console.log(patient)
 <p>{{ patient["Codice_Fiscale"] }}</p>
 
 <nav class="vertical">
-    <a href="">Diagnosi</a>
+    <a>Diagnosi</a>
     <a>Prescrizioni</a>
     <a>Sessioni</a>
     <a>Test</a>
 </nav>
+
+<List query="/paziente/1/diagnosi">
+
+</List>
 
 </template>
 

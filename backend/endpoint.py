@@ -164,11 +164,16 @@ def get_patient(id: int, token: str | None = Header(default=None)):
     res = query_single_row(token, "SELECT * FROM PAZIENTI WHERE ID = ?", (id,))
     return dict(res)
 
-
 @app.get("/pazienti")
 def get_patient(token: str | None = Header(default=None)):
     print("GET_PATIENTS")
     ret = query_all_rows(token, "SELECT * FROM PAZIENTI")
     return ret
+
+@app.get("/paziente/{id}/diagnosi")
+def get_diagnosi(id: int, token: str | None = Header(default=None)):
+    print("GET_PATIENT_DIAGNOSIS")
+    res = query_single_row(token, "SELECT * FROM diagnosi WHERE ID_Paziente = ?", (id,))
+    return dict(res)
 
 # uvicorn endpoint:app --reload
