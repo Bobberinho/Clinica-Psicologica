@@ -173,7 +173,7 @@ def get_patient(token: str | None = Header(default=None)):
 @app.get("/paziente/{id}/diagnosi")
 def get_diagnosi(id: int, token: str | None = Header(default=None)):
     print("GET_PATIENT_DIAGNOSIS")
-    res = query_single_row(token,
+    res = query_all_rows(token,
          """SELECT 
         PAZIENTI.Nome AS Nome_Paziente,
         PAZIENTI.Cognome AS Cognome_Paziente,
@@ -186,8 +186,8 @@ def get_diagnosi(id: int, token: str | None = Header(default=None)):
     JOIN PAZIENTI
         ON DIAGNOSI.ID_Paziente = PAZIENTI.ID
     JOIN DISTURBI
-        ON DIAGNOSI.ID_Disturbo = DISTURBI.ID;
-    WHERE PAZIENTI.ID = ?""", (id,))
+        ON DIAGNOSI.ID_Disturbo = DISTURBI.ID
+    WHERE PAZIENTI.ID = ?;""", (id,))
     return res
 # orribile, sì, ma funziona! (ti prego dimmi che funziona bene, ci ho impiegato 15 min solo per ricordarmi le Join)
 @app.get("/paziente/{id}/prescrizioni")
