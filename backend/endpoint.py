@@ -270,34 +270,33 @@ def get_prescriptions(id: int,token: str | None = Header(default=None)):
     return res
 
 @app.get("/diffusione_disturbi")
-def get_mental_disorders(id: int,token: str | None = Header(default=None)):
+def get_mental_disorders(token: str | None = Header(default=None)):
     print("GET_MENTAL_DISORDERS")
     res=query_all_rows(token, 
-        """ SELECT 
+        """SELECT 
             d.Nome AS Disturbo,
             d.Categoria,
-        COUNT(DISTINCT diag.ID_Paziente) AS Numero_Pazienti,
-        ROUND(
-            (COUNT(DISTINCT diag.ID_Paziente) * 100.0) / (SELECT COUNT(*) FROM PAZIENTI), 2
-        ) AS Percentuale_Pazienti
-        FROM DIAGNOSI diag
-        JOIN DISTURBI d ON diag.ID_Disturbo = d.ID
-        GROUP BY d.ID, d.Nome, d.Categoria
-        ORDER BY Percentuale_Pazienti DESC;
-
-""")
+            COUNT(DISTINCT diag.ID_Paziente) AS Numero_Pazienti,
+            round((SELECT COUNT(DISTINCT diag.ID_Paziente) FROM DIAGNOSI) * 1.0 / (SELECT COUNT(DISTINCT ID_Paziente) FROM DIAGNOSI), 4)
+                AS Percentuale_Pazienti
+            FROM DIAGNOSI diag
+            JOIN DISTURBI d ON diag.ID_Disturbo = d.ID
+            GROUP BY d.ID, d.Nome, d.Categoria
+            ORDER BY Percentuale_Pazienti DESC;""")
     return res
 
 @app.get("/numero_sedute_mese")
-def get_session_count_this_month(id: int,token: str | None = Header(default=None)):
+def get_session_count_this_month(token: str | None = Header(default=None)):
     print("GET_SESSION_COUNT")
-    res=query_single_row(token,
-        """SELECT COUNT(*) from SEDUTE
-        WHERE SEDUTE.Data BETWEEN datetime('now', 'start of month') AND datetime('now', 'localtime');""")
+    user = authenticate_token(token)
+    conn = connect_to_db()
+    cursor = conn.cursor()
+    row = cursor.execute("""SELECT COUNT(*) as num from SEDUTE WHERE SEDUTE.Data BETWEEN datetime('now', 'start of month') AND datetime('now', 'localtime');""").fetchone()
+    res = row["num"]
     return res
 
 @app.get("/elenco_pazienti_con_prescrizione")
-def get_patients_with_prescriptions(id: int,token: str | None = Header(default=None)):
+def get_patients_with_prescriptions(token: str | None = Header(default=None)):
     print("GET_PATIENTS_WITH_PRESCRIPTIONS")
     res=query_all_rows(token,
         """SELECT Nome, Cognome from PAZIENTI
