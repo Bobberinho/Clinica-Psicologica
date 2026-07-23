@@ -37,6 +37,13 @@ class Prescrizione(BaseModel):
     Data: str
     Note: str
     Lista_Dettagli: List[Dettagli_Prescrizione]
+class Diagnosi(BaseModel):
+    ID_Specialista:int
+    ID_Paziente:int
+    ID_Disturbo:int
+    Stato:str
+    Descrizione:str
+    Data:str
 
 def check_pwd(email: str, password: str):
     conn = connect_to_db()
@@ -203,24 +210,34 @@ def get_meds(token: str | None = Header(default=None)):
     res = query_all_rows(token,"SELECT * FROM FARMACI")
     return res
 
+@app.get("/disturbi")
+def get_conditions(token: str | None = Header(default=None)):
+    print("GET_CONDITIONS")
+    res = query_all_rows(token,"SELECT * FROM DISTURBI")
+    return res
+
 @app.get("/paziente/{id}/diagnosi")
 def get_diagnosis(id: int, token: str | None = Header(default=None)):
     print("GET_PATIENT_DIAGNOSIS")
     res = query_all_rows(token,
          """SELECT 
-        PAZIENTI.Nome AS Nome_Paziente,
-        PAZIENTI.Cognome AS Cognome_Paziente,
-        DIAGNOSI.Stato AS Stato_Diagnosi,
-        DIAGNOSI.Descrizione AS Note_Diagnosi,
-        DISTURBI.Nome AS Nome_Disturbo,
-        DISTURBI.Categoria AS Categoria_Disturbo,
-        DISTURBI.Descrizione AS Descrizione_Disturbo
-    FROM DIAGNOSI
-    JOIN PAZIENTI
-        ON DIAGNOSI.ID_Paziente = PAZIENTI.ID
-    JOIN DISTURBI
-        ON DIAGNOSI.ID_Disturbo = DISTURBI.ID
-    WHERE PAZIENTI.ID = ?;""", (id,))
+                DIAGNOSI.ID AS ID_Diagnosi,
+                DIAGNOSI.Stato AS Stato_Diagnosi,
+                DIAGNOSI.Descrizione AS Note_Diagnosi,
+                DIAGNOSI.Data AS Data_Diagnosi,
+                DISTURBI.Nome AS Nome_Disturbo,
+                DISTURBI.Categoria AS Categoria_Disturbo,
+                DISTURBI.Descrizione AS Descrizione_Disturbo,
+                SPECIALISTI.Nome AS Nome_Specialista,
+                SPECIALISTI.Cognome AS Cognome_Specialista
+            FROM DIAGNOSI
+            JOIN PAZIENTI
+                ON DIAGNOSI.ID_Paziente = PAZIENTI.ID
+            JOIN DISTURBI
+                ON DIAGNOSI.ID_Disturbo = DISTURBI.ID
+            JOIN SPECIALISTI
+                ON DIAGNOSI.ID_Specialista = SPECIALISTI.ID_Specialista
+            WHERE PAZIENTI.ID = ?;""", (id,))
     return res
 
 @app.get("/paziente/{id}/prescrizioni")
@@ -234,6 +251,7 @@ def get_prescriptions(id: int,token: str | None = Header(default=None)):
             p.ID_Psichiatra,
             s.Nome AS Nome_Psichiatra,
             s.Cognome AS Cognome_Psichiatra,
+            f.ID AS ID_Farmaco,
             f.Nome AS Nome_Farmaco,
             f.Principio_Attivo,
             f.Forma_Farmaceutica,
@@ -305,6 +323,36 @@ async def create_prescription(id:int, prescrizione: Prescrizione, token: str | N
         conn.close()
 
     return get_patients_with_prescriptions(id, token)
+
+@app.post("/paziente/{id}/diagnosi")
+async def create_diagnosis(id:int, diagnosi: Diagnosi, token: str | None = Header(default=None) ):
+    print("POST_DIAGNOSIS")
+    user = authenticate_token(token)
+    conn = connect_to_db()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""INSERT INTO DIAGNOSI(ID_Paziente, ID_Specialista, ID_Disturbo, Stato, Descrizione, Data) VALUES(?,?,?,?,?,?)""", (id,user["ID_Specialista"], diagnosi.ID_Disturbo, diagnosi.Stato, diagnosi.Descrizione, diagnosi.Data))
+        conn.commit()
+    finally:
+        conn.close()
+
+    print("AGGIUNTA_DIAGNOSI")
+    return {}
+
+
+@app.post("/elimina_prescrizione/{id}")
+async def delete_prescription(id:int, id_farmaco:int, token: str | None = Header(default=None)):
+    user = authenticate_token(token)
+    conn = connect_to_db()
+    try:
+        cursor = conn.cursor()
+        print(id, id_farmaco)
+        cursor.execute("""DELETE FROM DETTAGLI_PRESCRIZIONE WHERE ID_Prescrizione = ? AND ID_Farmaco = ?""", (id,id_farmaco,))
+        conn.commit()
+    finally:
+        conn.close()
+    return {}
+
 
 
 

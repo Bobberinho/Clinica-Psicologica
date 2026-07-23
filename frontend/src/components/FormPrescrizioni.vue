@@ -1,4 +1,5 @@
 <script setup>
+import Close from '@/icons/Close.vue';
 import { api_get, sort } from '@/util';
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
@@ -10,6 +11,7 @@ const farmaci_db = ref([])
 farmaci_db.value = sort(await api_get("/farmaci"), "Nome")
 const farmaci_db_filtered = computed(() => farmaci_db.value.filter((f) => f["Nome"].match(new RegExp(nome_farmaco.value, "i"))))
 
+const emit = defineEmits(["submit"])
 
 
 const farmaci = ref([])
@@ -53,6 +55,8 @@ function add_prescrizione(event) {
         console.log(prescrizione)
         api_get(`${route.path}/prescrizione`, "", "POST", prescrizione)
     }
+    form_open.value = false
+    emit("submit")
     // TODO: errore se non c'è almeno un farmaco aggiunto
 }
 function reset() {
@@ -78,9 +82,7 @@ function reset() {
     <li class="list compact">
         <ul class="list-item no-bg" v-for="(farmaco, idx) in farmaci">
             <div class="list-action">
-                <button class="close-button" @click="remove_farmaco(idx)">
-                    <svg fill="#000000" height="200px" width="200px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 460.775 460.775" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M285.08,230.397L456.218,59.27c6.076-6.077,6.076-15.911,0-21.986L423.511,4.565c-2.913-2.911-6.866-4.55-10.992-4.55 c-4.127,0-8.08,1.639-10.993,4.55l-171.138,171.14L59.25,4.565c-2.913-2.911-6.866-4.55-10.993-4.55 c-4.126,0-8.08,1.639-10.992,4.55L4.558,37.284c-6.077,6.075-6.077,15.909,0,21.986l171.138,171.128L4.575,401.505 c-6.074,6.077-6.074,15.911,0,21.986l32.709,32.719c2.911,2.911,6.865,4.55,10.992,4.55c4.127,0,8.08-1.639,10.994-4.55 l171.117-171.12l171.118,171.12c2.913,2.911,6.866,4.55,10.993,4.55c4.128,0,8.081-1.639,10.992-4.55l32.709-32.719 c6.074-6.075,6.074-15.909,0-21.986L285.08,230.397z"></path> </g></svg>
-                </button>
+                <Close @click="remove_farmaco(idx)"></Close>
             </div>
             <div class="list-item-title">
                 <svg class="list-item-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M9 14H15M12 11V17M8 7V9L6.21115 12.5777C6.07229 12.8554 6 13.1616 6 13.4721V19C6 20.1046 6.89543 21 8 21H16C17.1046 21 18 20.1046 18 19V13.4721C18 13.1616 17.9277 12.8554 17.7889 12.5777L16 9V7M8 7H16M8 7C7.44772 7 7 6.55228 7 6V5C7 4.44772 7.44772 4 8 4H16C16.5523 4 17 4.44772 17 5V6C17 6.55228 16.5523 7 16 7" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
@@ -143,25 +145,6 @@ function reset() {
     position: absolute;
     top: .5rem;
     right: .5rem;
-}
-.close-button {
-    border-radius: 50%;
-    padding: .5rem;
-    height: 2rem;
-    width: 2rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-}
-.close-button:hover {
-    background-color: rgba(255, 0, 0, 0.1);
-}
-.close-button svg {
-    width: 100%;
-    height: 100%;
-}
-.close-button svg path {
-    fill: red;
 }
 
 

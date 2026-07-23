@@ -140,6 +140,7 @@ form input, textarea, select {
 	font-size: 1rem;
 	border: 2px solid darkslategray;
 	flex-grow: 1;
+	background: none;
 }
 form input:focus, textarea:focus, select:focus {
 	outline: 3px solid palegreen;

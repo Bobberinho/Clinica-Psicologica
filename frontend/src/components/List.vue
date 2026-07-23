@@ -4,22 +4,29 @@ import { ref } from 'vue';
 import Prescrizione from './Prescrizione.vue';
 
 const props = defineProps(['query', 'title'])
-console.log(props.query)
+
 const list = ref([])
 const error = ref(false)
 const error_info = ref({})
-try {
-    list.value = await api_get(props.query)
-} catch (err) {
-    error.value = true
-    error_info.value = err
+
+const refresh = async () => {
+    try {
+        list.value = await api_get(props.query)
+    } catch (err) {
+        error.value = true
+        error_info.value = err
+    }
+    console.log("REFRESHED LIST: ", list.value)
 }
-console.log(list.value)
+refresh()
+defineExpose({
+    refresh
+})
 </script>
 
 <template>
 <div v-if="!error" class="list fill-window">
-    <li v-for="item in list" :key="item['ID_Prescrizione']" class="list-item">
+    <li v-for="item in list" class="list-item">
         <slot name="item" v-bind="item"></slot> <!-- IMPORTANTE CHE name E v-bind SIANO UGUALI -->
     </li>
 </div>
@@ -40,11 +47,11 @@ console.log(list.value)
     align-items: center;
     gap: .5rem;
 }
-.list-item-title svg {
+.list-item-title :deep(svg) {
     width: 2rem;
     height: 2rem;
 }
-.list-item-title svg path {
+.list-item-title :deep(svg) path {
     stroke: darkgreen;
 }
 

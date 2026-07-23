@@ -21,7 +21,6 @@ export async function api_get(path, params, method = "GET", payload={}) {
                     "Token": localStorage.getItem("token"),
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(payload),
             })
         else if (method == "POST")
             response = await fetch(`http://127.0.0.1:8000${path}?${params}`, {
@@ -30,6 +29,7 @@ export async function api_get(path, params, method = "GET", payload={}) {
                     "Token": localStorage.getItem("token"),
                     "Content-Type": "application/json"
                 },
+                body: JSON.stringify(payload),
             })
     }
     finally {
