@@ -275,17 +275,15 @@ def get_mental_disorders(token: str | None = Header(default=None)):
     res=query_all_rows(token, 
         """ SELECT 
     d.Nome AS Disturbo,
-    d.Categoria,
     COUNT(diag.ID) AS Numero_Diagnosi,
-    ROUND(
-        (COUNT(diag.ID) * 1.0) / (SELECT COUNT(*) FROM DIAGNOSI), 
-        2
-    ) AS Percentuale_Diagnosi
+    -- Percentuale esatta senza arrotondamento forzato
+    (COUNT(diag.ID) * 1.0 / SUM(COUNT(diag.ID)) OVER()) AS Percentuale_Esatta,
+    -- Percentuale arrotondata a 2 decimali
+    ROUND(COUNT(diag.ID) * 1.0 / SUM(COUNT(diag.ID)) OVER(), 2) AS Percentuale
 FROM DIAGNOSI diag
 JOIN DISTURBI d ON diag.ID_Disturbo = d.ID
-GROUP BY d.ID, d.Nome, d.Categoria
-HAVING COUNT(diag.ID) >= 1
-ORDER BY Percentuale_Diagnosi DESC;
+GROUP BY d.ID, d.Nome
+ORDER BY Numero_Diagnosi DESC;
 
 """)
     return res
