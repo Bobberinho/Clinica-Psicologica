@@ -1,6 +1,7 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, useTemplateRef, computed } from 'vue'
 import StatisticsEntry from './StatisticsEntry.vue';
+
 const props = defineProps(['pie_data'])
 // const pie_data = [
 //     { title: "Margherita", percentage: 0.35, color: "brown" },
@@ -24,6 +25,11 @@ const css_colors = ["DarkSlateGray", "MidnightBlue", "Teal", "ForestGreen", "Dar
 //         rotation += slice.percentage
 //     })
 // })
+
+const slice_info_el = useTemplateRef('slice_info')
+const slice_info_title = ref("")
+const slice_info_percent = ref(0)
+const slice_info_percent_print = computed(() => pretty_percent(slice_info_percent.value))
 
 onMounted(() => {
     let rotation = 0
@@ -70,6 +76,23 @@ function calc_rotation(idx) {
 function pretty_percent(percent) {
     return Math.round(percent * 100) / 100 + "%"
 }
+function hover_in(item) {
+    document.getElementById(item.title).classList.add("hover")
+    slice_info_percent.value = item.percentage
+    slice_info_title.value = item.title
+    slice_info_el.value.style.setProperty("--color", random_color(props.pie_data.indexOf(item)))
+    slice_info_el.value.style.setProperty("--x", get_hover_x(item))
+    slice_info_el.value.style.setProperty("--y", get_hover_y(item))
+}
+function hover_out(item) {
+    document.getElementById(item.title).classList.remove("hover")
+}
+function get_hover_x(slice) {
+
+}
+function get_hover_y(slice) {
+
+}
 </script>
 
 <template>
@@ -79,16 +102,21 @@ function pretty_percent(percent) {
 </div> -->
 
 
+<section class="chart-container">
+    <section class="scroll-list">
+        <StatisticsEntry class="hover" v-for="item in pie_data" @mouseenter="hover_in(item)" @mouseleave="hover_out(item)" :title="item.title" :value="pretty_percent(item.percentage)"></StatisticsEntry>
+    </section>
 
-<section class="scroll-list">
-    <StatisticsEntry class="hover" v-for="item in pie_data" :title="item.title" :value="pretty_percent(item.percentage)"></StatisticsEntry>
-</section>
-
-<section class="chart">
-    <svg viewBox="-1 -1 2 2" style="transform: rotate(-90deg);">
-        <!-- <circle r="1" fill="tomato"></circle> -->
-        <path v-for="(slice, idx) in pie_data" :id="slice.title" :fill="random_color(idx)" :d="draw_path(slice.percentage, calc_rotation(idx))"></path>
-    </svg>
+    <section class="chart">
+        <svg viewBox="-1 -1 2 2" style="transform: rotate(-90deg);">
+            <!-- <circle r="1" fill="tomato"></circle> -->
+            <path v-for="(slice, idx) in pie_data" @mouseenter="hover_in(slice)" @mouseleave="hover_out(slice)" :id="slice.title" :fill="random_color(idx)" :d="draw_path(slice.percentage, calc_rotation(idx))"></path>
+        </svg>
+        <div ref="slice_info" class="hover-info">
+            <div class="title">{{ slice_info_title }}</div>
+            <div class="percentage">{{ slice_info_percent_print }}</div>
+        </div>
+    </section>
 </section>
 
 
@@ -96,13 +124,37 @@ function pretty_percent(percent) {
 
 
 <style scoped>
+.chart-container {
+    display: flex;
+}
 .scroll-list {
     max-height: 20rem;
     overflow: scroll;
 }
 .chart {
     margin: 2rem 4rem;
+    flex-grow: 1;
     overflow: visible;
+    position: relative;
+}
+.hover-info {
+    position: absolute;
+    --x: 0;
+    --y: 0;
+    top: var(--y);
+    left: var(--x);
+    --color: red;
+    color: var(--color);
+    font-size: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.hover-info .title {
+
+}
+.hover-info .percentage {
+    font-weight: bold;
 }
 svg {
     overflow: visible;
@@ -114,8 +166,11 @@ svg path {
     --translate-y: 0;
     transition: .1s transform linear;
 }
-svg path:hover {
+svg path.hover {
     transform: translate(var(--translate-x), var(--translate-y)) !important;
+}
+svg path title {
+    
 }
 /* .pie-chart {
     display: grid;

@@ -71,7 +71,7 @@ def check_email(email: str):
                 ELSE 'psicoterapeuta' 
             END AS ruolo,
             -- Informazioni specifiche delle rispettive tabelle
-            psi.Numero_Iscrizione_Medici,
+            psi.Albo_Medici,
             pst.Albo_Psicoterapeuti
             FROM SPECIALISTI s
             LEFT JOIN PSICHIATRI psi ON s.ID_Specialista = psi.ID_Specialista
