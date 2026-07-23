@@ -274,16 +274,18 @@ def get_mental_disorders(id: int,token: str | None = Header(default=None)):
     print("GET_MENTAL_DISORDERS")
     res=query_all_rows(token, 
         """ SELECT 
-            d.Nome AS Disturbo,
-            d.Categoria,
-        COUNT(DISTINCT diag.ID_Paziente) AS Numero_Pazienti,
-        ROUND(
-            (COUNT(DISTINCT diag.ID_Paziente) * 100.0) / (SELECT COUNT(*) FROM PAZIENTI), 2
-        ) AS Percentuale_Pazienti
-        FROM DIAGNOSI diag
-        JOIN DISTURBI d ON diag.ID_Disturbo = d.ID
-        GROUP BY d.ID, d.Nome, d.Categoria
-        ORDER BY Percentuale_Pazienti DESC;
+    d.Nome AS Disturbo,
+    d.Categoria,
+    COUNT(DISTINCT diag.ID_Paziente) AS Numero_Pazienti,
+    ROUND(
+        (COUNT(DISTINCT diag.ID_Paziente) * 100.0) / 
+        NULLIF((SELECT COUNT(DISTINCT ID) FROM PAZIENTI), 0), 
+        2
+    ) AS Percentuale_Pazienti
+FROM DISTURBI d
+LEFT JOIN DIAGNOSI diag ON d.ID = diag.ID_Disturbo
+GROUP BY d.ID, d.Nome, d.Categoria
+ORDER BY Percentuale_Pazienti DESC;
 
 """)
     return res
