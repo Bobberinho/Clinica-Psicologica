@@ -342,6 +342,7 @@ async def create_diagnosis(id:int, diagnosi: Diagnosi, token: str | None = Heade
 
 @app.post("/elimina_prescrizione/{id}")
 async def delete_prescription(id:int, id_farmaco:int, token: str | None = Header(default=None)):
+    print("DELETE_PRESCRIPTION")
     user = authenticate_token(token)
     conn = connect_to_db()
     try:
@@ -353,7 +354,19 @@ async def delete_prescription(id:int, id_farmaco:int, token: str | None = Header
         conn.close()
     return {}
 
-
+@app.post("/elimina_diagnosi/{id}")
+async def delete_diagnosis(id:int, token: str | None = Header(default=None)):
+    print("DELETE_DIAGNOSIS")
+    user = authenticate_token(token)
+    conn = connect_to_db()
+    try:
+        cursor = conn.cursor()
+        print(id)
+        cursor.execute("""DELETE FROM DIAGNOSI WHERE ID = ?""", (id))
+        conn.commit()
+    finally:
+        conn.close()
+    return {}
 
 
 
