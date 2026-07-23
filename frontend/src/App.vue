@@ -3,6 +3,7 @@ import { useRoute } from 'vue-router';
 import UserWidget from './components/building_components/UserWidget.vue';
 import { onMounted, provide, ref } from 'vue';
 import { api_get } from './util.js';
+import router from './router/index.js';
 
 const utente = ref({})
 provide("utente", utente)
@@ -17,7 +18,9 @@ async function get_profile() {
 		utente.value = {}
 	}
 }
-
+router.afterEach(() => {
+	resize_fills()
+})
 onMounted(() => {
     resize_fills()
 })
@@ -139,6 +142,7 @@ form input, textarea, select {
 	border-radius: .5rem;
 	font-size: 1rem;
 	border: 2px solid darkslategray;
+	background: white;
 	flex-grow: 1;
 	background: none;
 }
@@ -167,60 +171,6 @@ button:hover {
 	background-color: gainsboro;
 }
 
-
-
-
-
-
-
-.list {
-    display: flex;
-    margin-top: 1rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    gap: .5rem;
-    flex-direction: column;
-    overflow-y: scroll;
-}
-.list-item {
-    color: black;
-    text-decoration: none;
-    padding: .8rem;
-    border: 2px solid darkgreen;
-    border-radius: .5rem;
-    background-color: white;
-    cursor: pointer;
-    flex-grow: 1;
-	list-style-type: none;
-	position: relative;
-}
-.list-item:hover {
-    background-color: color-mix(in srgb, white 95%, black 5%);
-}
-.list-item-title {
-    font-weight: bold;
-}
-.list-item-subtitle {
-    color: gray;
-}
-.list-item-info-wseparator {
-    margin-top: .2rem;
-    display: flex;
-    gap: 1rem;
-}
-.list-item-info-wseparator span {
-    position: relative;
-}
-.list-item-info-wseparator span ~ span::before {
-    content: "";
-    width: 8px;
-    height: 8px;
-    border-radius: 100%;
-    background-color: lightgray;
-    position: absolute;
-    top: calc(50% - 4px);
-    left: calc(-0.5rem - 4px);
-}
 
 
 

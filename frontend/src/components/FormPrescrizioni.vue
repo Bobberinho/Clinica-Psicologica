@@ -12,7 +12,7 @@ const farmaci_db = ref([])
 farmaci_db.value = sort(await api_get("/farmaci"), "Nome")
 const farmaci_db_filtered = computed(() => farmaci_db.value.filter((f) => f["Nome"].match(new RegExp(nome_farmaco.value, "i"))))
 
-const emit = defineEmits(["submit"])
+const emit = defineEmits(["after_submit"])
 
 
 const farmaci = ref([])
@@ -54,10 +54,11 @@ function add_prescrizione(event) {
         }
         farmaci.value.forEach((f) => prescrizione["Lista_Dettagli"].push(f))
         console.log(prescrizione)
+        reset()
         api_get(`${route.path}/prescrizione`, "", "POST", prescrizione)
     }
     form_open.value = false
-    emit("submit")
+    emit("after_submit")
     // TODO: errore se non c'è almeno un farmaco aggiunto
 }
 function reset() {
@@ -80,7 +81,7 @@ function reset() {
     <li class="list compact">
         <ul class="list-item no-bg" v-for="(farmaco, idx) in farmaci">
             <div class="list-action">
-                <Close @click="remove_farmaco(idx)"></Close>
+                <Close @close="remove_farmaco(idx)"></Close>
             </div>
             <div class="list-item-title">
                 <svg class="list-item-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M9 14H15M12 11V17M8 7V9L6.21115 12.5777C6.07229 12.8554 6 13.1616 6 13.4721V19C6 20.1046 6.89543 21 8 21H16C17.1046 21 18 20.1046 18 19V13.4721C18 13.1616 17.9277 12.8554 17.7889 12.5777L16 9V7M8 7H16M8 7C7.44772 7 7 6.55228 7 6V5C7 4.44772 7.44772 4 8 4H16C16.5523 4 17 4.44772 17 5V6C17 6.55228 16.5523 7 16 7" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>

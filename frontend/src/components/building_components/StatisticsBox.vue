@@ -5,7 +5,9 @@ const props = defineProps(["title"])
 <template>
 <section class="statistics-container">
     <h2 class="title">{{ title }}</h2>
-    <slot></slot>
+    <section class="stats">
+        <slot></slot>
+    </section>
 </section>
 </template>
 
@@ -17,6 +19,10 @@ const props = defineProps(["title"])
     padding: 2rem;
     border-radius: .8rem;
     box-shadow: 1px 1px 4px gray;
+}
+.statistics-container.max-height .stats {
+    max-height: 20rem;
+    overflow: scroll;
 }
 .title {
     margin: 0;

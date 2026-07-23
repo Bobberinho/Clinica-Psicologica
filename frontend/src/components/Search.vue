@@ -36,7 +36,7 @@ function toggle_case_sensitive() {
 
 <div style="position: sticky;">{{ count }} {{ count != 1 ? "risultati." : "risultato." }}</div>
 
-<section class="list fill-window">
+<section class="list fill-window hover">
     <a :href="'/paziente/' + patient.ID" class="list-item" v-for="patient in patients_filtered" :key="patient.ID">
         <div class="list-item-title">{{ patient["Nome"] }} {{ patient["Cognome"] }}</div>
         <div class="list-item-subtitle">{{ patient["Codice_Fiscale"] }}</div>

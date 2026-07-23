@@ -4,9 +4,10 @@ import PieChart from './building_components/PieChart.vue';
 import { computed, ref } from 'vue';
 import StatisticsBox from './building_components/StatisticsBox.vue';
 import StatisticsEntry from './building_components/StatisticsEntry.vue';
+import router from '@/router/index.js';
 
 const diffusione_disturbi = ref(await api_get("/diffusione_disturbi"))
-const pie_data = computed(() => diffusione_disturbi.value.map((d) => { return { title: d["Disturbo"], percentage: d["Percentuale_Pazienti"] } }))
+const pie_data = computed(() => diffusione_disturbi.value.map((d) => { return { title: d["Disturbo"], percentage: d["Percentuale_Esatta"], percentage_rounded: d["Percentuale"] } }))
 
 const pazienti_con_prescrizioni = ref(await api_get("/elenco_pazienti_con_prescrizione"))
 const numero_sedute_mese = ref((await api_get("/numero_sedute_mese")))
@@ -22,6 +23,9 @@ const numero_sedute_mese = ref((await api_get("/numero_sedute_mese")))
     </StatisticsBox>
     <StatisticsBox title="Diffusione dei disturbi">
         <PieChart :pie_data="pie_data"></PieChart>
+    </StatisticsBox>
+    <StatisticsBox title="Elenco dei pazienti con prescrizioni" class="max-height">
+        <StatisticsEntry class="hover" v-for="paziente in pazienti_con_prescrizioni" @click="router.push(`/paziente/${paziente['ID']}`)" :title="paziente['Nome'] + ' ' + paziente['Cognome']"></StatisticsEntry>
     </StatisticsBox>
 </section>
 </template>

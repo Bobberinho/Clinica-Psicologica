@@ -241,10 +241,10 @@ def get_diagnosis(id: int, token: str | None = Header(default=None)):
     return res
 
 @app.get("/paziente/{id}/prescrizioni")
-def get_prescriptions(id: int,token: str | None = Header(default=None)):
+def get_prescriptions(id: int, token: str | None = Header(default=None)):
     print("GET_PATIENT_PRESCRIPTION")
     res = query_all_rows(token,
-        """ SELECT 
+        """SELECT 
             p.ID AS ID_Prescrizione,
             p.Data,
             p.Note AS Note_Prescrizione,
@@ -261,7 +261,7 @@ def get_prescriptions(id: int,token: str | None = Header(default=None)):
         FROM PRESCRIZIONI p
         JOIN DETTAGLI_PRESCRIZIONE dp 
         ON p.ID = dp.ID_Prescrizione
-        JOIN FARMACI f 
+        JOIN FARMACI f
             ON dp.ID_Farmaco = f.ID
         JOIN SPECIALISTI s
             ON p.ID_Psichiatra = s.ID_Specialista
@@ -302,7 +302,7 @@ def get_session_count_this_month(token: str | None = Header(default=None)):
 def get_patients_with_prescriptions(token: str | None = Header(default=None)):
     print("GET_PATIENTS_WITH_PRESCRIPTIONS")
     res=query_all_rows(token,
-        """SELECT Nome, Cognome from PAZIENTI
+        """SELECT PAZIENTI.ID, Nome, Cognome from PAZIENTI
         JOIN PRESCRIZIONI p
         ON PAZIENTI.ID = p.ID_Paziente
         WHERE PAZIENTI.ID = p.ID_Paziente""")
@@ -317,14 +317,16 @@ async def create_prescription(id:int, prescrizione: Prescrizione, token: str | N
     try:
         cursor = conn.cursor()
         cursor.execute("""INSERT INTO PRESCRIZIONI(ID_Paziente,ID_Psichiatra,Data,Note) VALUES(?,?,?,?)""", (id,user["ID_Specialista"], prescrizione.Data, prescrizione.Note))
-        print(cursor.lastrowid)
-        for dettaglio in prescrizione.Lista_Dettagli:
-            cursor.execute("""INSERT INTO DETTAGLI_PRESCRIZIONE(ID_Prescrizione,ID_Farmaco,Posologia,Durata) VALUES(?,?,?,?) """,(cursor.lastrowid, dettaglio.ID_Farmaco,dettaglio.Posologia,dettaglio.Durata))
         conn.commit()
+        id_prescrizione = cursor.lastrowid
+        print(prescrizione.Lista_Dettagli)
+        for dettaglio in prescrizione.Lista_Dettagli:
+            cursor.execute("""INSERT INTO DETTAGLI_PRESCRIZIONE(ID_Prescrizione,ID_Farmaco,Posologia,Durata) VALUES(?,?,?,?) """,(id_prescrizione, dettaglio.ID_Farmaco,dettaglio.Posologia,dettaglio.Durata))
+            conn.commit()
     finally:
         conn.close()
 
-    return get_patients_with_prescriptions(id, token)
+    return {}
 
 @app.post("/paziente/{id}/diagnosi")
 async def create_diagnosis(id:int, diagnosi: Diagnosi, token: str | None = Header(default=None) ):

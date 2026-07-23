@@ -2,45 +2,42 @@
 import { ref, onMounted, useTemplateRef, computed } from 'vue'
 import StatisticsEntry from './StatisticsEntry.vue';
 
-const props = defineProps(['pie_data'])
-// const pie_data = [
-//     { title: "Margherita", percentage: 0.35, color: "brown" },
-//     { title: "Americana", percentage: 0.30, color: "royalblue" },
-//     { title: "Salsiccia", percentage: 0.20, color: "orange" },
-//     { title: "Quattro Stagioni", percentage: 0.10, color: "green" },
-//     { title: "Diavola", percentage: 0.05, color: "gray" },
-// ]
-
 const css_colors = ["DarkSlateGray", "MidnightBlue", "Teal", "ForestGreen", "DarkOliveGreen", "OliveDrab", "SaddleBrown", "Sienna", "Peru", "FireBrick", "Crimson", "Coral", "DarkOrange", "Goldenrod", "SandyBrown", "DarkOrchid", "MediumSlateBlue", "SlateGray", "CadetBlue", "RosyBrown"];
+const props = defineProps(['pie_data'])
+const computed_data = computed(function () {
+    let rotation = 0
+    let idx = 0
+    const res = []
+    props.pie_data.forEach((s) => {
+        res.push({
+            idx: idx,
+            title: s.title,
+            percentage: s.percentage,
+            color: random_color(idx),
+            rotation: rotation,
+        })
+        rotation += s.percentage
+        idx++
+    })
+    return res
+})
 
-// onMounted(() => {
-//     let rotation = 0
-//     console.log(props.pie_data)
-//     props.pie_data.forEach(slice => {
-//         const el = document.getElementById(slice.title)
-//         el.style.setProperty("--percentage", slice.percentage)
-//         el.style.setProperty("--color", css_colors[Math.floor(Math.random() * css_colors.length)])
-//         el.style.setProperty("--rotation", rotation)
-//         el.style.setProperty("--title", "\"" + slice.title + "\"")
-//         rotation += slice.percentage
-//     })
-// })
 
 const slice_info_el = useTemplateRef('slice_info')
+const show_info_el = ref(false)
 const slice_info_title = ref("")
 const slice_info_percent = ref(0)
 const slice_info_percent_print = computed(() => pretty_percent(slice_info_percent.value))
 
 onMounted(() => {
     let rotation = 0
-    console.log(props.pie_data)
-    props.pie_data.forEach(slice => {
+    computed_data.value.forEach(slice => {
         const el = document.getElementById(slice.title)
         const mid_angle = slice.percentage / 2 + rotation
         const distance = 0.05
         const translate_x = get_x(mid_angle) * distance * 100
         const translate_y = get_y(mid_angle) * distance * 100
-        console.log(translate_x, translate_y)
+        // console.log(translate_x, translate_y)
         el.style.setProperty("--translate-x", translate_y + "%")
         el.style.setProperty("--translate-y", translate_x + "%")
         rotation += slice.percentage
@@ -57,41 +54,38 @@ function draw_path(percentage, starting_percentage) {
     const move = `M ${get_y(starting_percentage)} ${get_x(starting_percentage)}`
     const arc = `A 1 1 0 ${percentage > .5 ? 1 : 0} 1 ${get_y(percentage + starting_percentage)} ${get_x(percentage + starting_percentage)}`
     const center = "L 0 0"
-    console.log("FROM: ", starting_percentage, "PATH: ", move, arc, center)
+    // console.log("FROM: ", starting_percentage, "PATH: ", move, arc, center)
     return `${move} ${arc} ${center}`
 }
 function random_color(idx) {
     if (idx < css_colors.length) return css_colors[idx]
     else return css_colors[idx % css_colors.length]
 }
-function calc_rotation(idx) {
-    let i = 0
-    let rotation = 0
-    while (i < idx) {
-        rotation += props.pie_data[i].percentage
-        i++
-    }
-    return rotation
-}
 function pretty_percent(percent) {
     return Math.round(percent * 100) / 100 + "%"
 }
 function hover_in(item) {
-    document.getElementById(item.title).classList.add("hover")
+    show_info_el.value = true
+
+    const el = document.getElementById(item.title)
+    el.classList.add("hover")
     slice_info_percent.value = item.percentage
     slice_info_title.value = item.title
-    slice_info_el.value.style.setProperty("--color", random_color(props.pie_data.indexOf(item)))
-    slice_info_el.value.style.setProperty("--x", get_hover_x(item))
-    slice_info_el.value.style.setProperty("--y", get_hover_y(item))
+    slice_info_el.value.style.setProperty("--color", item.color)
+
+    const path_box = el.getBoundingClientRect() // posizionamento assoluto della PATH
+    const container_box = el.closest('.chart').getBoundingClientRect() // posizionamento assoluto del container
+
+    const info_x = path_box.left + path_box.width / 2 - container_box.left
+    const info_y = path_box.top + path_box.height / 2 - container_box.top
+
+    slice_info_el.value.style.left = `${info_x}px`
+    slice_info_el.value.style.top = `${info_y}px`
+    slice_info_el.value.style.opacity = '1'
 }
 function hover_out(item) {
     document.getElementById(item.title).classList.remove("hover")
-}
-function get_hover_x(slice) {
-
-}
-function get_hover_y(slice) {
-
+    show_info_el.value = false
 }
 </script>
 
@@ -103,19 +97,19 @@ function get_hover_y(slice) {
 
 
 <section class="chart-container">
-    <section class="scroll-list">
-        <StatisticsEntry class="hover" v-for="item in pie_data" @mouseenter="hover_in(item)" @mouseleave="hover_out(item)" :title="item.title" :value="pretty_percent(item.percentage)"></StatisticsEntry>
-    </section>
-
+    
     <section class="chart">
         <svg viewBox="-1 -1 2 2" style="transform: rotate(-90deg);">
             <!-- <circle r="1" fill="tomato"></circle> -->
-            <path v-for="(slice, idx) in pie_data" @mouseenter="hover_in(slice)" @mouseleave="hover_out(slice)" :id="slice.title" :fill="random_color(idx)" :d="draw_path(slice.percentage, calc_rotation(idx))"></path>
+            <path v-for="slice in computed_data" @mouseenter="hover_in(slice)" @mouseleave="hover_out(slice)" :id="slice.title" :fill="slice.color" :d="draw_path(slice.percentage, slice.rotation)"></path>
         </svg>
-        <div ref="slice_info" class="hover-info">
+        <div ref="slice_info" class="hover-info" :class="show_info_el ? 'show' : ''">
             <div class="title">{{ slice_info_title }}</div>
             <div class="percentage">{{ slice_info_percent_print }}</div>
         </div>
+    </section>
+    <section class="scroll-list">
+        <StatisticsEntry class="hover" v-for="item in computed_data" @mouseenter="hover_in(item)" @mouseleave="hover_out(item)" :title="item.title" :value="pretty_percent(item.percentage)"></StatisticsEntry>
     </section>
 </section>
 
@@ -125,14 +119,14 @@ function get_hover_y(slice) {
 
 <style scoped>
 .chart-container {
-    display: flex;
+    /* display: flex; */
 }
 .scroll-list {
     max-height: 20rem;
     overflow: scroll;
 }
 .chart {
-    margin: 2rem 4rem;
+    margin: 2rem 20%;
     flex-grow: 1;
     overflow: visible;
     position: relative;
@@ -146,9 +140,17 @@ function get_hover_y(slice) {
     --color: red;
     color: var(--color);
     font-size: 1.2rem;
-    display: flex;
+    /* display: flex; */
+    display: none;
     flex-direction: column;
     align-items: center;
+    background-color: contrast-color(var(--color));
+    box-shadow: 1px 1px 4px var(--color);
+    padding: .5rem;
+    border-radius: .6rem;
+}
+.hover-info.show {
+    display: flex;
 }
 .hover-info .title {
 

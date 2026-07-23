@@ -58,10 +58,10 @@ async function delete_prescription(id_p, id_f) {
 
 <div v-if="active_tab == 0" class="tab">
     <h2>Diagnosi</h2>
-    <FormDiagnosi @submit="diagnosis_list.refresh()"></FormDiagnosi>
+    <FormDiagnosi @after_submit="diagnosis_list.refresh()"></FormDiagnosi>
     <List ref="diagnosis_list" :query="route.path + '/diagnosi'" title="Diagnosi">
         <template #item="{ ID_Diagnosi, Nome_Disturbo, Stato_Diagnosi, Note_Diagnosi, Data_Diagnosi, Categoria_Disturbo, Descrizione_Disturbo, Nome_Specialista, Cognome_Specialista }">
-            <div class="list-item-title">
+            <div class="list-item-title large">
                 <Stethoscope></Stethoscope>
                 {{ Nome_Disturbo }}
             </div>
@@ -78,11 +78,11 @@ async function delete_prescription(id_p, id_f) {
 </div>
 <div v-if="active_tab == 1" class="tab">
     <h2>Prescrizioni</h2>
-    <FormPrescrizioni v-if="is_psichiatra" @submit="prescriptions_list.refresh()"></FormPrescrizioni>
+    <FormPrescrizioni v-if="is_psichiatra" @after_submit="prescriptions_list.refresh()"></FormPrescrizioni>
     <List ref="prescriptions_list" :query="route.path + '/prescrizioni'" title="Prescrizioni">
         <template #item="{ ID_Prescrizione, ID_Farmaco, Nome_Farmaco, Principio_Attivo, Dosaggio, Forma_Farmaceutica, Posologia, Durata, Note_Prescrizione, Nome_Psichiatra, Cognome_Psichiatra, Data }">
-            <Close v-if="utente['Is_Psichiatra']" class="absolute" @click="delete_prescription(ID_Prescrizione, ID_Farmaco)"></Close>
-            <div class="list-item-title">
+            <Close v-if="utente['Is_Psichiatra']" :absolute_pos="true" confirmation_message="Confermare l'eliminazione della prescrizione?" :confirmation_prompt="true" @close="delete_prescription(ID_Prescrizione, ID_Farmaco)"></Close>
+            <div class="list-item-title large">
                 <PillBottle></PillBottle>
                 {{ Nome_Farmaco }} <span class=grayed>({{ Principio_Attivo }} {{ Dosaggio }})</span></div>
             <div class=""><strong>Modalità di assunzione: </strong>{{ Forma_Farmaceutica }}</div>
