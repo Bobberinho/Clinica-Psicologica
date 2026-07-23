@@ -1,6 +1,6 @@
 <script setup>
 import { useRoute } from 'vue-router';
-import UserWidget from './components/UserWidget.vue';
+import UserWidget from './components/building_components/UserWidget.vue';
 import { onMounted, provide, ref } from 'vue';
 import { api_get } from './util.js';
 

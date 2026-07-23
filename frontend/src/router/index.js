@@ -3,6 +3,7 @@ import Search from '../components/Search.vue'
 import Login from '@/Login.vue'
 import Patient from '@/components/Patient.vue'
 import Profilo from '@/components/Profilo.vue'
+import Statistiche from '@/components/Statistiche.vue'
 
 
 const router = createRouter({
@@ -13,6 +14,7 @@ const router = createRouter({
     { path: '/cerca', component: Search },
     { path: '/profilo', component: Profilo },
     { path: '/paziente/:id', component: Patient },
+    { path: '/statistiche', component: Statistiche }
   ],
 })
 

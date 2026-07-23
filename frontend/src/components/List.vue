@@ -1,7 +1,6 @@
 <script setup>
 import { api_get } from '@/util';
 import { ref } from 'vue';
-import Prescrizione from './Prescrizione.vue';
 
 const props = defineProps(['query', 'title'])
 
