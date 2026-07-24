@@ -2,20 +2,20 @@ export function login(username, password) {
     console.log(`Attempted login with username=${username} password=${password}`)
 }
 
-export async function api_get(path, params, method = "GET", payload={}) {
+export async function api_get(path, params="", method = "GET", payload={}) {
     let response
-    console.log(`GETTING http://127.0.0.1:8000${path}?${params}...`)
-    console.log(localStorage.getItem("token"))
+    const url = `http://127.0.0.1:8000${path}${params != "" ? `?${params}` : ""}`
+    console.log(`${method} ${url}...`)
     try {
         if (method == "GET")
-            response = await fetch(`http://127.0.0.1:8000${path}?${params}`, {
+            response = await fetch(url, {
                 method: "GET",
                 headers: {
                     "Token": localStorage.getItem("token")
                 },
             })
         else if (method == "POST" && payload == {})
-            response = await fetch(`http://127.0.0.1:8000${path}`, {
+            response = await fetch(url, {
                 method: "POST",
                 headers: {
                     "Token": localStorage.getItem("token"),
@@ -23,7 +23,7 @@ export async function api_get(path, params, method = "GET", payload={}) {
                 },
             })
         else if (method == "POST")
-            response = await fetch(`http://127.0.0.1:8000${path}?${params}`, {
+            response = await fetch(url, {
                 method: "POST",
                 headers: {
                     "Token": localStorage.getItem("token"),

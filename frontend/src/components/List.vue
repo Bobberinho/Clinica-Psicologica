@@ -11,9 +11,10 @@ const error_info = ref({})
 const refresh = async () => {
     try {
         list.value = await api_get(props.query)
+        error.value = false
     } catch (err) {
+        error_info.value = { is_error: !/404/.test(err.toString()), message: "Nulla da visualizzare qui." }
         error.value = true
-        error_info.value = err
     }
     console.log("REFRESHED LIST: ", list.value)
 }
@@ -29,7 +30,7 @@ defineExpose({
         <slot name="item" v-bind="item"></slot> <!-- IMPORTANTE CHE name E v-bind SIANO UGUALI -->
     </li>
 </div>
-<div v-else class="error">{{ error_info }}</div>
+<div v-else :class="error_info.is_error ? 'error' : ''" style="margin: 1rem;">{{ error_info.message }}</div>
 
 </template>
 

@@ -42,7 +42,7 @@ function remove_farmaco(idx) {
 
 const secondary_form_open = ref(false)
 const note = ref("")
-function add_prescrizione(event) {
+async function add_prescrizione(event) {
     event.preventDefault()
     const date = new Date().toISOString().split('T', 1)[0]
     if (farmaci.value != []) {
@@ -55,10 +55,11 @@ function add_prescrizione(event) {
         farmaci.value.forEach((f) => prescrizione["Lista_Dettagli"].push(f))
         console.log(prescrizione)
         reset()
-        api_get(`${route.path}/prescrizione`, "", "POST", prescrizione)
+        await api_get(`${route.path}/prescrizione`, "", "POST", prescrizione)
+        emit("after_submit")
+        console.log("END POST")
     }
     form_open.value = false
-    emit("after_submit")
     // TODO: errore se non c'è almeno un farmaco aggiunto
 }
 function reset() {
