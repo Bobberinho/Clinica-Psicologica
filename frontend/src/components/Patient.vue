@@ -22,10 +22,8 @@ const active_tab = ref(0)
 const prescriptions_list = ref(null)
 const diagnosis_list = ref(null)
 
-async function delete_prescription(id_p, id_f) {
-    const params = new URLSearchParams()
-    params.append("id_farmaco", id_f)
-    await api_get(`/elimina_prescrizione/${id_p}`, params, "POST")
+async function delete_prescription(id_p) {
+    await api_get(`/elimina_prescrizione/${id_p}`, "", "POST")
     prescriptions_list.value.refresh()
 }
 </script>
@@ -80,21 +78,25 @@ async function delete_prescription(id_p, id_f) {
     <h2>Prescrizioni</h2>
     <FormPrescrizioni v-if="is_psichiatra" @after_submit="prescriptions_list.refresh()"></FormPrescrizioni>
     <List ref="prescriptions_list" :query="route.path + '/prescrizioni'" title="Prescrizioni">
-        <template #item="{ ID_Prescrizione, ID_Farmaco, Nome_Farmaco, Principio_Attivo, Dosaggio, Forma_Farmaceutica, Posologia, Durata, Note_Prescrizione, Nome_Psichiatra, Cognome_Psichiatra, Data }">
-            <Close v-if="utente['Is_Psichiatra']" :absolute_pos="true" confirmation_message="Confermare l'eliminazione della prescrizione?" :confirmation_prompt="true" @close="delete_prescription(ID_Prescrizione, ID_Farmaco)"></Close>
-            <div class="list-item-title large">
-                <PillBottle></PillBottle>
-                {{ Nome_Farmaco }} <span class=grayed>({{ Principio_Attivo }} {{ Dosaggio }})</span></div>
-            <div class=""><strong>Modalità di assunzione: </strong>{{ Forma_Farmaceutica }}</div>
-            <div class=""><strong>Dosaggio: </strong>{{ Posologia }}</div>
-            <div class=""><strong>Durata del trattamento: </strong>{{ Durata }}</div>
-            <div class="list-item-subtitle"><strong>Note dello psichiatra: </strong>{{ Note_Prescrizione }}</div>
-            
-            <!-- <button class="info-btn" @click="toggle_info()"><svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 416.979 416.979" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M356.004,61.156c-81.37-81.47-213.377-81.551-294.848-0.182c-81.47,81.371-81.552,213.379-0.181,294.85 c81.369,81.47,213.378,81.551,294.849,0.181C437.293,274.636,437.375,142.626,356.004,61.156z M237.6,340.786 c0,3.217-2.607,5.822-5.822,5.822h-46.576c-3.215,0-5.822-2.605-5.822-5.822V167.885c0-3.217,2.607-5.822,5.822-5.822h46.576 c3.215,0,5.822,2.604,5.822,5.822V340.786z M208.49,137.901c-18.618,0-33.766-15.146-33.766-33.765 c0-18.617,15.147-33.766,33.766-33.766c18.619,0,33.766,15.148,33.766,33.766C242.256,122.755,227.107,137.901,208.49,137.901z"></path> </g> </g></svg></button> -->
-            <div class="list-info">
-                <hr>
-                <div class="list-item-info-wseparator grayed"><span><strong>Psichiatra: </strong><span>{{ Nome_Psichiatra }} {{ Cognome_Psichiatra }}</span></span><span><strong>Data di prescrizione: </strong><span>{{ Data }}</span></span></div>
+        <template #item="{ ID_Prescrizione, Note_Prescrizione, Nome_Psichiatra, Cognome_Psichiatra, Data, Lista_Dettagli }">
+            <div class="list-action">
+                <Close v-if="utente['Is_Psichiatra']" class="list-action" confirmation_message="Confermare l'eliminazione della prescrizione?" :confirmation_prompt="true" @close="delete_prescription(ID_Prescrizione)"></Close>
             </div>
+            <div class="list-info">
+                <div class="list-item-info-wseparator grayed"><span><strong>Psichiatra: </strong><span>{{ Nome_Psichiatra }} {{ Cognome_Psichiatra }}</span></span><span><strong>Data di prescrizione: </strong><span>{{ Data }}</span></span></div>
+                <div class="list-item-subtitle"><strong>Note dello psichiatra: </strong>{{ Note_Prescrizione }}</div>
+            </div>
+            <div class="list compact">
+                <div v-for="farmaco in Lista_Dettagli" class="list-item no-bg no-hover">
+                    <div class="list-item-title">
+                        <PillBottle></PillBottle>
+                        {{ farmaco.Nome_Farmaco }} <span class=grayed>({{ farmaco.Principio_Attivo }} {{ farmaco.Dosaggio }})</span></div>
+                    <div class=""><strong>Modalità di assunzione: </strong>{{ farmaco.Forma_Farmaceutica }}</div>
+                    <div class=""><strong>Dosaggio: </strong>{{ farmaco.Posologia }}</div>
+                    <div class=""><strong>Durata del trattamento: </strong>{{ farmaco.Durata }}</div>
+                </div>
+            </div>
+            <!-- <button class="info-btn" @click="toggle_info()"><svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 416.979 416.979" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M356.004,61.156c-81.37-81.47-213.377-81.551-294.848-0.182c-81.47,81.371-81.552,213.379-0.181,294.85 c81.369,81.47,213.378,81.551,294.849,0.181C437.293,274.636,437.375,142.626,356.004,61.156z M237.6,340.786 c0,3.217-2.607,5.822-5.822,5.822h-46.576c-3.215,0-5.822-2.605-5.822-5.822V167.885c0-3.217,2.607-5.822,5.822-5.822h46.576 c3.215,0,5.822,2.604,5.822,5.822V340.786z M208.49,137.901c-18.618,0-33.766-15.146-33.766-33.765 c0-18.617,15.147-33.766,33.766-33.766c18.619,0,33.766,15.148,33.766,33.766C242.256,122.755,227.107,137.901,208.49,137.901z"></path> </g> </g></svg></button> -->
         </template>
     </List>
 </div>

@@ -19,6 +19,7 @@ async function get_profile() {
 	}
 }
 router.afterEach(() => {
+	console.log("RESIZING LISTS")
 	resize_fills()
 })
 onMounted(() => {

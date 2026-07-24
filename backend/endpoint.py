@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+import json
 from typing import Any, List, Tuple
 
 from fastapi import FastAPI, HTTPException, Header
@@ -250,23 +251,30 @@ def get_prescriptions(id: int, token: str | None = Header(default=None)):
             p.Note AS Note_Prescrizione,
             p.ID_Psichiatra,
             s.Nome AS Nome_Psichiatra,
-            s.Cognome AS Cognome_Psichiatra,
-            f.ID AS ID_Farmaco,
-            f.Nome AS Nome_Farmaco,
-            f.Principio_Attivo,
-            f.Forma_Farmaceutica,
-            f.Dosaggio,
-            dp.Posologia,
-            dp.Durata
+            s.Cognome AS Cognome_Psichiatra
         FROM PRESCRIZIONI p
-        JOIN DETTAGLI_PRESCRIZIONE dp 
-        ON p.ID = dp.ID_Prescrizione
-        JOIN FARMACI f
-            ON dp.ID_Farmaco = f.ID
         JOIN SPECIALISTI s
             ON p.ID_Psichiatra = s.ID_Specialista
         WHERE p.ID_Paziente = ?
         ORDER BY p.Data DESC;""", (id,))
+
+    for prescrizione in res:
+        det = query_all_rows(token, 
+            """SELECT
+                f.ID AS ID_Farmaco,
+                f.Nome AS Nome_Farmaco,
+                f.Principio_Attivo,
+                f.Forma_Farmaceutica,
+                f.Dosaggio,
+                dp.Posologia,
+                dp.Durata
+                FROM DETTAGLI_PRESCRIZIONE dp 
+                JOIN FARMACI f
+                    ON dp.ID_Farmaco = f.ID
+                WHERE dp.ID_Prescrizione = ?
+            """, (prescrizione["ID_Prescrizione"],))
+        prescrizione["Lista_Dettagli"] = [dp for dp in det]
+    
     return res
 
 @app.get("/diffusione_disturbi")
@@ -274,18 +282,16 @@ def get_mental_disorders(token: str | None = Header(default=None)):
     print("GET_MENTAL_DISORDERS")
     res=query_all_rows(token, 
         """ SELECT 
-    d.Nome AS Disturbo,
-    COUNT(diag.ID) AS Numero_Diagnosi,
-    -- Percentuale esatta senza arrotondamento forzato
-    (COUNT(diag.ID) * 1.0 / SUM(COUNT(diag.ID)) OVER()) AS Percentuale_Esatta,
-    -- Percentuale arrotondata a 2 decimali
-    ROUND(COUNT(diag.ID) * 1.0 / SUM(COUNT(diag.ID)) OVER(), 2) AS Percentuale
-FROM DIAGNOSI diag
-JOIN DISTURBI d ON diag.ID_Disturbo = d.ID
-GROUP BY d.ID, d.Nome
-ORDER BY Numero_Diagnosi DESC;
-
-""")
+                d.Nome AS Disturbo,
+                COUNT(diag.ID) AS Numero_Diagnosi,
+                -- Percentuale esatta senza arrotondamento forzato
+                (COUNT(diag.ID) * 1.0 / SUM(COUNT(diag.ID)) OVER()) AS Percentuale_Esatta,
+                -- Percentuale arrotondata a 2 decimali
+                ROUND(COUNT(diag.ID) * 1.0 / SUM(COUNT(diag.ID)) OVER(), 2) AS Percentuale
+            FROM DIAGNOSI diag
+            JOIN DISTURBI d ON diag.ID_Disturbo = d.ID
+            GROUP BY d.ID, d.Nome
+            ORDER BY Numero_Diagnosi DESC;""")
     return res
 
 @app.get("/numero_sedute_mese")
@@ -302,7 +308,7 @@ def get_session_count_this_month(token: str | None = Header(default=None)):
 def get_patients_with_prescriptions(token: str | None = Header(default=None)):
     print("GET_PATIENTS_WITH_PRESCRIPTIONS")
     res=query_all_rows(token,
-        """SELECT PAZIENTI.ID, Nome, Cognome from PAZIENTI
+        """SELECT DISTINCT PAZIENTI.ID, Nome, Cognome from PAZIENTI
         JOIN PRESCRIZIONI p
         ON PAZIENTI.ID = p.ID_Paziente
         WHERE PAZIENTI.ID = p.ID_Paziente""")
@@ -345,14 +351,16 @@ async def create_diagnosis(id:int, diagnosi: Diagnosi, token: str | None = Heade
 
 
 @app.post("/elimina_prescrizione/{id}")
-async def delete_prescription(id:int, id_farmaco:int, token: str | None = Header(default=None)):
+async def delete_prescription(id:int, token: str | None = Header(default=None)):
     print("DELETE_PRESCRIPTION")
     user = authenticate_token(token)
     conn = connect_to_db()
     try:
         cursor = conn.cursor()
-        print(id, id_farmaco)
-        cursor.execute("""DELETE FROM DETTAGLI_PRESCRIZIONE WHERE ID_Prescrizione = ? AND ID_Farmaco = ?""", (id,id_farmaco,))
+        print(id)
+        cursor.execute("""DELETE FROM DETTAGLI_PRESCRIZIONE WHERE ID_Prescrizione = ?""", (id,))
+        conn.commit()
+        cursor.execute("""DELETE FROM PRESCRIZIONI WHERE ID = ?""", (id,))
         conn.commit()
     finally:
         conn.close()

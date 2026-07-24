@@ -2,7 +2,7 @@
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { ref, useTemplateRef } from 'vue';
 
-const props = defineProps(["confirmation_prompt", "confirmation_message", "absolute_pos"])
+const props = defineProps(["confirmation_prompt", "confirmation_message"])
 const emit = defineEmits(["close"])
 
 const dialog = ref(null)
@@ -40,12 +40,6 @@ function confirm() {
 .close-button:hover {
     background-color: rgba(255, 0, 0, 0.1);
 }
-.close-button.absolute {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;    
-}
-
 .close-button svg {
     width: 100%;
     height: 100%;

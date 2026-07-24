@@ -5,7 +5,6 @@ import { computed, inject, ref } from 'vue';
 const utente = ref(inject("utente"))
 const error = computed(() => utente.value["Nome"] === undefined)
 
-console.log(error.value, utente.value["Nome"])
 </script>
 
 

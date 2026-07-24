@@ -104,6 +104,36 @@ defineExpose({
     top: calc(50% - 4px);
     left: calc(-0.5rem - 4px);
 }
+.list-action {
+    position: absolute;
+    top: .5rem;
+    right: .5rem;
+}
+
+.list.compact {
+    padding: .5rem;
+    background: whitesmoke;
+}
+.list.compact .list-item-title {
+    font-size: 1.1rem;
+}
+.list.compact .list-item-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+.list.compact .list-item-icon path {
+    stroke: black;
+}
+.list-item.no-bg {
+    border: none;
+    margin: 0;
+}
+.list-item.no-bg:hover {
+    box-shadow: 1px 1px 4px gray;
+}
+.list-item.no-bg.no-hover:hover {
+    box-shadow: none;
+}
 
 .list-item-title :deep(svg) {
     width: 2rem;

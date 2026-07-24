@@ -117,33 +117,6 @@ function reset() {
 </template>
 
 <style scoped>
-.list.compact {
-    padding: .5rem;
-    background: whitesmoke;
-}
-.list.compact .list-item-title {
-    font-size: 1.1rem;
-}
-.list.compact .list-item-icon {
-    width: 1.5rem;
-    height: 1.5rem;
-}
-.list.compact .list-item-icon path {
-    stroke: black;
-}
-.list-item.no-bg {
-    border: none;
-    margin: 0;
-}
-.list-item.no-bg:hover {
-    box-shadow: 1px 1px 4px gray;
-}
-.list-action {
-    position: absolute;
-    top: .5rem;
-    right: .5rem;
-}
-
 
 .form-container {
     border: 2px solid darkgreen;
