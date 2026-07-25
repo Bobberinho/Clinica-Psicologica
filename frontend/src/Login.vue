@@ -15,7 +15,7 @@ async function login_form(event) {
         emit("login")
         router.push(`/profilo`)
     } catch (error) {
-        email.value = ""
+        password.value = ""
         error_info.value = error
     }
 }

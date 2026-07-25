@@ -2,7 +2,7 @@
 import { api_get } from '@/util';
 import { ref } from 'vue';
 
-const props = defineProps(['query', 'title'])
+const props = defineProps(['query', 'title', 'css_classes', 'css_item_classes'])
 
 const list = ref([])
 const error = ref(false)
@@ -25,8 +25,8 @@ defineExpose({
 </script>
 
 <template>
-<div v-if="!error" class="list fill-window">
-    <li v-for="item in list" class="list-item">
+<div v-if="!error" class="list" :class="css_classes">
+    <li v-for="item in list" class="list-item" :class="css_item_classes">
         <slot name="item" v-bind="item"></slot> <!-- IMPORTANTE CHE name E v-bind SIANO UGUALI -->
     </li>
 </div>

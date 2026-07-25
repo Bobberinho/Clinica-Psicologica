@@ -10,21 +10,38 @@ import Stethoscope from '@/icons/Stethoscope.vue';
 import PillBottle from '@/icons/PillBottle.vue';
 import Notebook from '@/icons/Notebook.vue';
 import FormDiagnosi from './FormDiagnosi.vue';
+import FormSedute from './FormSedute.vue';
+import FormTest from './FormTest.vue';
 const route = useRoute()
 const id = route.params.id
 const patient = ref(await api_get(`/paziente/${id}`))
 const utente = ref(inject("utente"))
 const is_psichiatra = computed(() => utente.value["Is_Psichiatra"] == 1)
+console.log(is_psichiatra.value)
 
 const active_tab = ref(0)
 
 
 const prescriptions_list = ref(null)
 const diagnosis_list = ref(null)
+const sessions_list = ref(null)
+const tests_list = ref(null)
 
 async function delete_prescription(id_p) {
     await api_get(`/elimina_prescrizione/${id_p}`, "", "POST")
     prescriptions_list.value.refresh()
+}
+async function delete_diagnosis(id_d) {
+    await api_get(`/elimina_diagnosi/${id_d}`, "", "POST")
+    diagnosis_list.value.refresh()
+}
+async function delete_session(id_s) {
+    await api_get(`/elimina_seduta/${id_s}`, "", "POST")
+    sessions_list.value.refresh()
+}
+async function delete_test(id_t) {
+    await api_get(`/elimina_test/${id_t}`, "", "POST")
+    tests_list.value.refresh()
 }
 </script>
 
@@ -46,7 +63,7 @@ async function delete_prescription(id_p) {
     </a>
     <a class="tab-button" @click="active_tab = 2" :class="active_tab == 2 ? 'active' : ''">
         <Calendar></Calendar>
-        <span>Sessioni</span>
+        <span>Sedute</span>
     </a>
     <a class="tab-button" @click="active_tab = 3" :class="active_tab == 3 ? 'active' : ''">
         <Notebook></Notebook>
@@ -59,6 +76,9 @@ async function delete_prescription(id_p) {
     <FormDiagnosi @after_submit="diagnosis_list.refresh()"></FormDiagnosi>
     <List ref="diagnosis_list" :query="route.path + '/diagnosi'" title="Diagnosi">
         <template #item="{ ID_Diagnosi, Nome_Disturbo, Stato_Diagnosi, Note_Diagnosi, Data_Diagnosi, Categoria_Disturbo, Descrizione_Disturbo, Nome_Specialista, Cognome_Specialista }">
+            <div class="list-action">
+                <Close confirmation_message="Confermare l'eliminazione della diagnosi?" :confirmation_prompt="true" @close="delete_diagnosis(ID_Diagnosi)"></Close>
+            </div>
             <div class="list-item-title large">
                 <Stethoscope></Stethoscope>
                 {{ Nome_Disturbo }}
@@ -101,12 +121,44 @@ async function delete_prescription(id_p) {
     </List>
 </div>
 <div v-if="active_tab == 2" class="tab">
-    <h2>Sessioni</h2>
-    
+    <h2>Sedute</h2>
+    <FormSedute @after_submit="sessions_list.refresh()"></FormSedute>
+    <List ref="sessions_list" :query="route.path + '/sedute'" title="Sedute" css_classes="compact" css_item_classes="no-bg">
+        <template #item="{ ID, ID_Specialista, Nome_Specialista, Cognome_Specialista, Descrizione, Data }">
+            <div class="list-action">
+                <Close confirmation_message="Confermare l'eliminazione della seduta?" :confirmation_prompt="true" @close="delete_session(ID)"></Close>
+            </div>
+            <div class="">{{ Descrizione }}</div>
+            <div class="list-info">
+                <hr>
+                <div class="list-item-info-wseparator grayed"><span><strong>Tenuta da: </strong><span>{{ Nome_Specialista }} {{ Cognome_Specialista }}</span></span><span><strong>Data: </strong><span>{{ Data }}</span></span></div>
+            </div>
+        </template>
+    </List>
 </div>
 <div v-if="active_tab == 3" class="tab">
     <h2>Test</h2>
-    
+    <FormTest v-if="!is_psichiatra" @after_submit="tests_list.refresh()"></FormTest>
+    <List ref="tests_list" :query="route.path + '/test'" title="Test">
+        <template #item="{ ID_Esecuzione, ID_Psicoterapeuta, Data_Esecuzione, Risultato, Note, Codice_Test, Nome_Test, Formato_Test, Categoria_Test, Nome_Psicoterapeuta, Cognome_Psicoterapeuta }">
+            <div class="list-action">
+                <Close v-if="!is_psichiatra" confirmation_message="Confermare l'eliminazione del test?" :confirmation_prompt="true" @close="delete_test(ID_Esecuzione)"></Close>
+            </div>
+            <div class="list-item-title large">
+                <Notebook></Notebook>
+                {{ Nome_Test }} ({{ Codice_Test }})
+            </div>
+            <div class=""><strong>Risultato: </strong>{{ Risultato }}</div>
+            <div class=""><strong>Note: </strong>{{ Note }}</div>
+            <div class="list-item-subtitle"><strong>Categoria del test: </strong>{{ Categoria_Test }}</div>
+            <div class="list-item-subtitle" style="margin-top: 0;"><strong>Formato del test: </strong>{{ Formato_Test }}</div>
+            
+            <div class="list-info">
+                <hr>
+                <div class="list-item-info-wseparator grayed"><span><strong>Effettuato da: </strong><span>{{ Nome_Psicoterapeuta }} {{ Cognome_Psicoterapeuta }}</span></span><span><strong>Data: </strong><span>{{ Data_Esecuzione }}</span></span></div>
+            </div>
+        </template>
+    </List>
 </div>
 
 </template>

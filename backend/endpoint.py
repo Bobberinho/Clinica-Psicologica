@@ -7,7 +7,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 import jwt
 from pydantic import BaseModel
-from tokens import generate_token
 import sqlite3
 
 app = FastAPI()
@@ -45,6 +44,18 @@ class Diagnosi(BaseModel):
     Stato:str
     Descrizione:str
     Data:str
+class Esecuzione_Test(BaseModel):
+    ID_Psicoterapeuta:int
+    ID_Paziente:int
+    ID_Test:int
+    Risultato:str
+    Note:str
+    Data_Esecuzione:str
+class Seduta(BaseModel):
+    ID_Paziente:int
+    ID_Specialista:int
+    Data:str
+    Descrizione:str
 
 def check_pwd(email: str, password: str):
     conn = connect_to_db()
@@ -217,6 +228,12 @@ def get_conditions(token: str | None = Header(default=None)):
     res = query_all_rows(token,"SELECT * FROM DISTURBI")
     return res
 
+@app.get("/test")
+def get_tests(token: str | None = Header(default=None)):
+    print("GET_TESTS")
+    res = query_all_rows(token, "SELECT * FROM TEST")
+    return res
+
 @app.get("/paziente/{id}/diagnosi")
 def get_diagnosis(id: int, token: str | None = Header(default=None)):
     print("GET_PATIENT_DIAGNOSIS")
@@ -275,6 +292,44 @@ def get_prescriptions(id: int, token: str | None = Header(default=None)):
             """, (prescrizione["ID_Prescrizione"],))
         prescrizione["Lista_Dettagli"] = [dp for dp in det]
     
+    return res
+
+@app.get("/paziente/{id}/test")
+def get_patient_tests(id: int, token: str | None = Header(default=None)):
+    print("GET_PATIENT_TESTS")
+    res = query_all_rows(token,
+         """SELECT 
+                ESECUZIONE_TEST.ID AS ID_Esecuzione,
+                ESECUZIONE_TEST.ID_Psicoterapeuta,
+                ESECUZIONE_TEST.Data_Esecuzione,
+                ESECUZIONE_TEST.Risultato,
+                ESECUZIONE_TEST.Note,
+                TEST.Codice AS Codice_Test,
+                TEST.Nome AS Nome_Test,
+                TEST.Formato AS Formato_Test,
+                TEST.Categoria AS Categoria_Test,
+                SPECIALISTI.Nome AS Nome_Psicoterapeuta,
+                SPECIALISTI.Cognome AS Cognome_Psicoterapeuta
+            FROM ESECUZIONE_TEST
+            JOIN TEST
+                ON ESECUZIONE_TEST.ID_Test = TEST.ID
+            JOIN SPECIALISTI
+                ON ESECUZIONE_TEST.ID_Psicoterapeuta = SPECIALISTI.ID_Specialista
+            WHERE ESECUZIONE_TEST.ID_Paziente = ?;""", (id,))
+    return res
+
+@app.get("/paziente/{id}/sedute")
+def get_patient_sessions(id: int, token: str | None = Header(default=None)):
+    print("GET_PATIENT_SESSIONS")
+    res = query_all_rows(token,
+    """SELECT
+            SEDUTE.*,
+            SPECIALISTI.Nome AS Nome_Specialista,
+            SPECIALISTI.Cognome AS Cognome_Specialista
+        FROM SEDUTE
+        JOIN SPECIALISTI
+        ON SPECIALISTI.ID_Specialista = SEDUTE.ID_Specialista
+        WHERE ID_Paziente = ?;""", (id,))
     return res
 
 @app.get("/diffusione_disturbi")
@@ -346,7 +401,34 @@ async def create_diagnosis(id:int, diagnosi: Diagnosi, token: str | None = Heade
     finally:
         conn.close()
 
-    print("AGGIUNTA_DIAGNOSI")
+    return {}
+
+@app.post("/paziente/{id}/seduta")
+async def create_session(id:int, seduta: Seduta, token: str | None = Header(default=None) ):
+    print("POST_SESSION")
+    user = authenticate_token(token)
+    conn = connect_to_db()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""INSERT INTO SEDUTE(ID_Paziente, ID_Specialista, Data, Descrizione) VALUES(?,?,?,?)""", (id, user["ID_Specialista"], seduta.Data, seduta.Descrizione))
+        conn.commit()
+    finally:
+        conn.close()
+
+    return {}
+
+@app.post("/paziente/{id}/test")
+async def create_test(id:int, test: Esecuzione_Test, token: str | None = Header(default=None) ):
+    print("POST_TEST")
+    user = authenticate_token(token)
+    conn = connect_to_db()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""INSERT INTO ESECUZIONE_TEST(ID_Psicoterapeuta, ID_Paziente, ID_Test, Data_Esecuzione, Risultato, Note) VALUES(?,?,?,?,?,?)""", (user["ID_Specialista"], id, test.ID_Test, test.Data_Esecuzione, test.Risultato, test.Note))
+        conn.commit()
+    finally:
+        conn.close()
+
     return {}
 
 
@@ -374,7 +456,36 @@ async def delete_diagnosis(id:int, token: str | None = Header(default=None)):
     try:
         cursor = conn.cursor()
         print(id)
-        cursor.execute("""DELETE FROM DIAGNOSI WHERE ID = ?""", (id))
+        cursor.execute("""DELETE FROM DIAGNOSI WHERE ID = ?""", (id,))
+        conn.commit()
+    finally:
+        conn.close()
+    return {}
+
+@app.post("/elimina_test/{id}")
+async def delete_test(id:int, token: str | None = Header(default=None)):
+    print("DELETE_TEST")
+    user = authenticate_token(token)
+    conn = connect_to_db()
+    try:
+        cursor = conn.cursor()
+        print(id)
+        cursor.execute("""DELETE FROM ESECUZIONE_TEST WHERE ID = ?""", (id,))
+        conn.commit()
+    finally:
+        conn.close()
+    return {}
+
+
+@app.post("/elimina_seduta/{id}")
+async def delete_session(id:int, token: str | None = Header(default=None)):
+    print("DELETE_SESSION")
+    user = authenticate_token(token)
+    conn = connect_to_db()
+    try:
+        cursor = conn.cursor()
+        print(id)
+        cursor.execute("""DELETE FROM SEDUTE WHERE ID = ?""", (id,))
         conn.commit()
     finally:
         conn.close()

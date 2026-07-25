@@ -116,7 +116,7 @@ function reset() {
 
 </template>
 
-<style scoped>
+<style>
 
 .form-container {
     border: 2px solid darkgreen;
