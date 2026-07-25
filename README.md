@@ -4,10 +4,10 @@ Nota: sono necessarie un'installazione di Node.js e di Python.
 Aprire un terminale nella cartella del progetto ed eseguire in ordine i seguenti comandi:
 ```
 cd backend
-python -m venv
-Scripts/activate
+python -m venv ./
+Scripts\activate
 python -m pip install fastapi pyjwt uvicorn
-Scripts/python.exe uvicorn endpoint:app --reload
+python -m uvicorn endpoint:app --reload
 ```
 ### 2) Esecuzione del frontend
 Aprire un secondo terminale ed eseguire i seguenti comandi:
