@@ -45,7 +45,7 @@ const note = ref("")
 async function add_prescrizione(event) {
     event.preventDefault()
     const date = new Date().toISOString().split('T', 1)[0]
-    if (farmaci.value != []) {
+    if (farmaci.value.length > 0) {
         const prescrizione = {
             ID_Paziente: route.params.id,
             Note: note.value,
@@ -58,8 +58,8 @@ async function add_prescrizione(event) {
         await api_get(`${route.path}/prescrizione`, "", "POST", prescrizione)
         emit("after_submit")
         console.log("END POST")
+        form_open.value = false
     }
-    form_open.value = false
     // TODO: errore se non c'è almeno un farmaco aggiunto
 }
 function reset() {

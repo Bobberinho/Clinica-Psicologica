@@ -15,6 +15,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 # Enable CORS
 origins = [
     "http://localhost:5173",
+    "http://localhost:4173",
     "http://localhost",
     "http://localhost:8080",
     "http://127.0.0.1:8000"
@@ -291,7 +292,7 @@ def get_prescriptions(id: int, token: str | None = Header(default=None)):
                 WHERE dp.ID_Prescrizione = ?
             """, (prescrizione["ID_Prescrizione"],))
         prescrizione["Lista_Dettagli"] = [dp for dp in det]
-    
+    print(res)
     return res
 
 @app.get("/paziente/{id}/test")
