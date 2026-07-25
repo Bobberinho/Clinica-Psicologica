@@ -17,4 +17,12 @@ npm install
 npm run build
 npm run preview
 ```
-Su un browser, navigare all'indirizzo: `[http](http://localhost:4173/)`
+Su un browser, navigare all'indirizzo: `http://localhost:4173/`
+### Credenziali di Accesso
+###### Accesso come psicologo:
+arturo.alberti@specialisti.it
+Password123
+
+###### Accesso come psichiatra:
+elena.bellini@specialisti.it
+PaninoAlTonno17
